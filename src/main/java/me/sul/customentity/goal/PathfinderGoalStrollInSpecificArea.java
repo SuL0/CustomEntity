@@ -1,6 +1,6 @@
-package me.sul.customentities.goals;
+package me.sul.customentity.goal;
 
-import me.sul.customentities.spawnarea.Area;
+import me.sul.customentity.spawnarea.Area;
 import net.minecraft.server.v1_12_R1.*;
 
 // PathfinderGoalMoveThroughVillage 기반. private 메소드 오버라이딩 못하는 문제로 상속하지 않았음.
@@ -35,7 +35,9 @@ public class PathfinderGoalStrollInSpecificArea extends PathfinderGoal {
                 break;
             }
         }
-        goalPath = nmsCreature.getNavigation().a(randLoc.getX(), randLoc.getY(), randLoc.getZ());
+        Navigation navigation = (Navigation) nmsCreature.getNavigation();
+        navigation.a(true); // canOpenDoors. b(): canPassDoors, c(): canFloat   .  PathfinderGoalOpenDoor과 함께 있어야 작동하는 듯?
+        goalPath = navigation.a(randLoc.getX(), randLoc.getY(), randLoc.getZ());
         return true;
     }
 

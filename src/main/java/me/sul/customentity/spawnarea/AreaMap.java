@@ -1,4 +1,4 @@
-package me.sul.customentities.spawnarea;
+package me.sul.customentity.spawnarea;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;

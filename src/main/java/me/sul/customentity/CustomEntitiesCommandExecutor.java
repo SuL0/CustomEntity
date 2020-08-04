@@ -1,7 +1,7 @@
-package me.sul.customentities;
+package me.sul.customentity;
 
-import me.sul.customentities.entities.EntityScav;
-import me.sul.customentities.spawnarea.AreaMap;
+import me.sul.customentity.entity.EntityScav;
+import me.sul.customentity.spawnarea.AreaMap;
 import net.minecraft.server.v1_12_R1.EntityInsentient;
 import org.bukkit.Location;
 import org.bukkit.Material;

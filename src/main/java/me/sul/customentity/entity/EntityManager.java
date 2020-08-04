@@ -1,7 +1,6 @@
-package me.sul.customentities.entities;
+package me.sul.customentity.entity;
 
-import me.sul.customentities.utils.CustomEntityRegistry;
-import org.bukkit.Bukkit;
+import me.sul.customentity.util.CustomEntityRegistry;
 import org.bukkit.entity.EntityType;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -23,13 +22,16 @@ public class EntityManager implements Listener {
         }
     }
 
+
     @EventHandler
     public void onChunkLoad(ChunkLoadEvent e) {
         // TODO: 몹이 있다면 제거 (disguise가 풀려있을 확률도 있고 해서)
     }
-    
+
     @EventHandler
     public void onDeath(EntityDeathEvent e) {
-        Bukkit.getServer().broadcastMessage("EntityType: " + e.getEntityType());
+        if (e.getEntity() instanceof EntityScav) {
+            e.getDrops().clear();
+        }
     }
 }

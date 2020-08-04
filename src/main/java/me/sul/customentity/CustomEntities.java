@@ -1,7 +1,8 @@
-package me.sul.customentities;
+package me.sul.customentity;
 
-import me.sul.customentities.entities.EntityManager;
-import me.sul.customentities.spawnarea.AreaMap;
+import me.sul.customentity.entity.EntityManager;
+import me.sul.customentity.entityweapon.ProjectileListener;
+import me.sul.customentity.spawnarea.AreaMap;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -18,6 +19,7 @@ public final class CustomEntities extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new EntityManager(), this);
         getCommand("scav").setExecutor(new CustomEntitiesCommandExecutor());
         new AreaMap();
+        Bukkit.getPluginManager().registerEvents(new ProjectileListener(), this);
     }
 
     public static CustomEntities getInstance() {

@@ -1,4 +1,4 @@
-package me.sul.customentities.utils;
+package me.sul.customentity.util;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
