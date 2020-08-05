@@ -4,7 +4,7 @@ import org.bukkit.Location;
 import org.bukkit.World;
 
 
-// TODO: y좌표 문제
+// TODO: y좌표는 없앨까?
 public class Area {
     private final Location minLocation;
     private final Location maxLocation;
@@ -52,6 +52,29 @@ public class Area {
         double randY = getMinY() + (getMaxY()-getMinY())*Math.random();
         double randZ = getMinZ() + (getMaxZ()-getMinZ())*Math.random();
         return new Location(getWorld(), randX, randY, randZ);
+    }
+
+    // NOTE: 여기에 y축은 배제시켰음.
+    public boolean isAwayFromArea(Location givenLoc) {
+        return (!(getMinX() <= givenLoc.getX() && givenLoc.getX() <= getMaxX() &&
+                getMinZ() <= givenLoc.getZ() && givenLoc.getZ() <= getMaxZ()));
+    }
+    public Location getClosestLocation(Location givenLoc) {
+        double[] location = new double[3];
+        double[] min = { getMinX(), getMinY(), getMinZ() }; // x, y, z
+        double[] max = { getMaxX(), getMaxY(), getMaxZ() }; // x, y, z
+        for (int i=0; i<3; i++) {
+            if (min[i] <= givenLoc.getX() && givenLoc.getX() <= max[i]) {
+                location[i] = givenLoc.getX();
+            } else {
+                if (min[i] > givenLoc.getX()) {
+                    location[i] = min[i];
+                } else {
+                    location[i] = max[i];
+                }
+            }
+        }
+        return new Location(givenLoc.getWorld(), location[0], location[1], location[2]);
     }
 
 }

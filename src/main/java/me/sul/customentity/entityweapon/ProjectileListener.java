@@ -13,27 +13,21 @@ public class ProjectileListener implements Listener {
     @EventHandler
     public void onDamage(EntityDamageByEntityEvent e) {
         if (e.isCancelled()) return;
+        Entity damager = e.getDamager();
         Entity victim = e.getEntity();
-        if (e.getDamager() instanceof Projectile && victim instanceof Damageable && !(victim instanceof EntityScav) &&
-                e.getDamager().hasMetadata(EntityCrackShotWeapon.PROJ_DAMAGE_META)) {
-            Projectile projectile = (Projectile) e.getDamager();
+        if (damager instanceof Projectile && damager.hasMetadata(EntityCrackShotWeapon.PROJ_DAMAGE_META) && victim instanceof Damageable) {
+            Entity attacker = (((Projectile) damager).getShooter() instanceof Entity) ? ((Entity)((Projectile) damager).getShooter()) : null;
+            if (attacker != null && attacker.getType() == EntityType.SKELETON && victim.getType() == EntityType.SKELETON) {
+                e.setCancelled(true);
+                return;
+            }
+
+            Projectile projectile = (Projectile) damager;
             double damage = projectile.getMetadata(EntityCrackShotWeapon.PROJ_DAMAGE_META).get(0).asDouble();
-            Vector knockbackVector = victim.getLocation().toVector().subtract(((Entity)projectile.getShooter()).getLocation().toVector()).normalize().multiply(0.3);
-            CSDirector.getInstance().setTempVulnerability((LivingEntity)victim);
-            ((Damageable)victim).damage(damage);
+            Vector knockbackVector = victim.getLocation().toVector().subtract(((Entity) projectile.getShooter()).getLocation().toVector()).normalize().multiply(0.3);
+            CSDirector.getInstance().setTempVulnerability((LivingEntity) victim);
+            ((Damageable) victim).damage(damage);
             victim.setVelocity(knockbackVector);
         }
     }
-//    @EventHandler
-//    public void onProjectileHit(ProjectileHitEvent e) {
-//        if (e.getHitEntity() != null && e.getHitEntity() instanceof Damageable &&
-//                e.getEntity().hasMetadata(EntityCrackShotWeapon.PROJ_DAMAGE_META)) {
-//            Entity shooter = (Entity)e.getEntity().getShooter();
-//            Entity victim = e.getHitEntity();
-//            double damage = e.getEntity().getMetadata(EntityCrackShotWeapon.PROJ_DAMAGE_META).get(0).asDouble();
-//            Vector knockbackVector = e.getEntity().getVelocity().normalize().multiply(new Vector(1, 0, 1).multiply(0.1));
-//            ((Damageable)victim).damage(damage);
-//            victim.setVelocity(knockbackVector);
-//        }
-//    }
 }

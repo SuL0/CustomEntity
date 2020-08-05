@@ -2,6 +2,7 @@ package me.sul.customentity.entity;
 
 import me.libraryaddict.disguise.disguisetypes.PlayerDisguise;
 import me.sul.customentity.goal.PathfinderGoalMoveInBattle;
+import me.sul.customentity.goal.PathfinderGoalStrollInSpecificArea;
 import me.sul.customentity.goal.target.PathfinderGoalShootEntity;
 import me.sul.customentity.spawnarea.Area;
 import net.minecraft.server.v1_12_R1.*;
@@ -12,6 +13,7 @@ import org.bukkit.craftbukkit.v1_12_R1.CraftWorld;
 // NOTE: 이상하게 r() 호출 후 생성자 호출됨
 public class EntityScav extends EntitySkeleton implements CustomEntity {
     private final Area area;
+    private boolean isSeeingTarget = false;
 
     public EntityScav(Area area) {
         this(area, area.getRandomLocation());
@@ -28,10 +30,11 @@ public class EntityScav extends EntitySkeleton implements CustomEntity {
         setCustomName("§cScav");
         setCustomNameVisible(true);
         getAttributeInstance(GenericAttributes.ATTACK_DAMAGE).setValue(15);
+        getAttributeInstance(GenericAttributes.FOLLOW_RANGE).setValue(50);
 //        ((org.bukkit.entity.LivingEntity)getBukkitEntity()).getEquipment().setItemInMainHand(new org.bukkit.inventory.ItemStack(Material.DIAMOND_PICKAXE, 1, (short)2));
         ((org.bukkit.entity.LivingEntity)getBukkitEntity()).getEquipment().setItemInMainHand(new org.bukkit.inventory.ItemStack(Material.BOW, 1));
         // TODO: 재생효과 추가
-        PlayerDisguise playerDisguise = new PlayerDisguise("§cScav");
+        PlayerDisguise playerDisguise = new PlayerDisguise("§c§lAI BOT");
         playerDisguise.setEntity(this.getBukkitEntity());
         playerDisguise.startDisguise();
         registerGoalSelector();
@@ -39,20 +42,29 @@ public class EntityScav extends EntitySkeleton implements CustomEntity {
     }
     private void registerGoalSelector() {
         goalSelector.a(1, new PathfinderGoalFloat(this));
-        goalSelector.a(1, new PathfinderGoalOpenDoor(this, false));
-//        goalSelector.a(3, new PathfinderGoalStrollInSpecificArea(this, area, 1.0F, 60));
+        goalSelector.a(2, new PathfinderGoalOpenDoor(this, false));
         goalSelector.a(4, new PathfinderGoalMoveInBattle<EntityScav>(this, 1.0D, 15.0F));
-        goalSelector.a(6, new PathfinderGoalLookAtPlayer(this, EntityHuman.class, 8.0F));
+        goalSelector.a(5, new PathfinderGoalStrollInSpecificArea<EntityScav>(this, area, 1.0F, 45));
+//        goalSelector.a(6, new PathfinderGoalLookAtPlayer(this, EntityHuman.class, 8.0F));
         goalSelector.a(6, new PathfinderGoalRandomLookaround(this));
     }
     private void registerTargetSelector() {
-        // 유저는 원거리로만 공격
-        targetSelector.a(1, new PathfinderGoalShootEntity<>(this, EntityPlayer.class, 5, true, false));
-//        targetSelector.a(2, new PathfinderGoalShootEntity<>(this, EntityMonster.class, 5, true, false));
+        // priority 1이 start()됐을 때 -> 2 또한 canUse() 중단
+        // priority 2가 start()됐을 때 -> 1은 canUse() 계속 실행중
+        // 2가 start() 후 1이 start() -> 2는 중단됨
 
-//        targetSelector.a(3, new PathfinderGoalNearestAttackableTarget<>(this, EntityInsentient.class, 5, false, false, (var0) -> {
-//            return var0 instanceof IMonster && !(var0 instanceof EntityScav);
-//        }));
+        // 2 -> 1순으로 실행돼야 함. 안 그러면, 2가 start()되고나서 1이 start()되면, 1의 start()에서 goal이 선택되고, 2의 stop()에서 goal이 삭제되버림.
+        targetSelector.a(2, new PathfinderGoalShootEntity<>(this, EntityMonster.class, 4, 4F, 2.0F, 5));
+        targetSelector.a(1, new PathfinderGoalShootEntity<>(this, EntityPlayer.class, 4, 4F, 2.0F, 5));
+    }
+
+    @Override
+    public void setSeeingTarget(boolean b) {
+        isSeeingTarget = b;
+    }
+    @Override
+    public boolean isSeeingTarget() {
+        return isSeeingTarget && getGoalTarget() != null;
     }
 
 
