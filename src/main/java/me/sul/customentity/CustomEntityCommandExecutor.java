@@ -14,7 +14,7 @@ import org.bukkit.event.entity.EntityTargetEvent;
 
 import java.util.Collections;
 
-public class CustomEntitiesCommandExecutor implements Listener, CommandExecutor {
+public class CustomEntityCommandExecutor implements Listener, CommandExecutor {
 
 
     @Override

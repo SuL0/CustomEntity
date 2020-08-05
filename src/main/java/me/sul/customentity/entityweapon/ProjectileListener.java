@@ -18,7 +18,7 @@ public class ProjectileListener implements Listener {
                 e.getDamager().hasMetadata(EntityCrackShotWeapon.PROJ_DAMAGE_META)) {
             Projectile projectile = (Projectile) e.getDamager();
             double damage = projectile.getMetadata(EntityCrackShotWeapon.PROJ_DAMAGE_META).get(0).asDouble();
-            Vector knockbackVector = victim.getLocation().toVector().subtract(((Entity)projectile.getShooter()).getLocation().toVector()).normalize().multiply(0.5);
+            Vector knockbackVector = victim.getLocation().toVector().subtract(((Entity)projectile.getShooter()).getLocation().toVector()).normalize().multiply(0.3);
             CSDirector.getInstance().setTempVulnerability((LivingEntity)victim);
             ((Damageable)victim).damage(damage);
             victim.setVelocity(knockbackVector);

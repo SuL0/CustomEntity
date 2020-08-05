@@ -1,7 +1,7 @@
-name: CustomEntities
+name: CustomEntity
 version: 1.0.0
 api-version: 1.12
-main: me.sul.customentities.CustomEntities
+main: me.sul.customentity.CustomEntity
 author: SuL
 description: "Add custom entities made with NMS"
 softdepend:

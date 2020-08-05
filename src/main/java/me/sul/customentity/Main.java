@@ -6,8 +6,8 @@ import me.sul.customentity.spawnarea.AreaMap;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
-public final class CustomEntities extends JavaPlugin {
-    private static CustomEntities instance;
+public final class Main extends JavaPlugin {
+    private static Main instance;
 
     @Override
     public void onEnable() {
@@ -17,12 +17,12 @@ public final class CustomEntities extends JavaPlugin {
 
     private void registerClasses() {
         Bukkit.getPluginManager().registerEvents(new EntityManager(), this);
-        getCommand("scav").setExecutor(new CustomEntitiesCommandExecutor());
+        getCommand("scav").setExecutor(new CustomEntityCommandExecutor());
         new AreaMap();
         Bukkit.getPluginManager().registerEvents(new ProjectileListener(), this);
     }
 
-    public static CustomEntities getInstance() {
+    public static Main getInstance() {
         return instance;
     }
 }

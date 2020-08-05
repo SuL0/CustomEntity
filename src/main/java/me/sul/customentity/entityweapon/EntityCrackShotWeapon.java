@@ -1,7 +1,7 @@
 package me.sul.customentity.entityweapon;
 
 import com.rhetorical.soundscape.SoundScapeAPI;
-import me.sul.customentity.CustomEntities;
+import me.sul.customentity.Main;
 import me.sul.customentity.event.CustomEntityShootEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -32,7 +32,7 @@ public class EntityCrackShotWeapon {
         Projectile proj = (Projectile) entity.getWorld().spawnEntity(projLoc, EntityType.SNOWBALL);
         proj.setShooter((ProjectileSource) entity);
         proj.setVelocity(projVector);
-        proj.setMetadata(PROJ_DAMAGE_META, new FixedMetadataValue(CustomEntities.getInstance(), damage));
+        proj.setMetadata(PROJ_DAMAGE_META, new FixedMetadataValue(Main.getInstance(), damage));
         SoundScapeAPI.playSound(projLoc, "akshoot", 1, 1, 50);
         Bukkit.getPluginManager().callEvent(new CustomEntityShootEvent(entity, proj));
     }
