@@ -29,11 +29,11 @@ public class PathfinderGoalStrollInSpecificArea<T extends EntityCreature & Custo
 
     @Override
     public boolean a() {  // canUse()
-        if (entity.getRandom().nextInt(randomInterval) != 0) return false;
         if (entity.getGoalTarget() != null) return false;
-
         org.bukkit.Location entityLoc = entity.getBukkitEntity().getLocation();
         org.bukkit.Location targetLoc = entityLoc;
+        isAwayFromArea = false;
+
         // 지정 구역에서 벗어났을 때
         if (area.isAwayFromArea(entityLoc)) {
             isAwayFromArea = true;
@@ -41,8 +41,8 @@ public class PathfinderGoalStrollInSpecificArea<T extends EntityCreature & Custo
             if (targetLoc.distance(entityLoc) > entity.getAttributeInstance(GenericAttributes.FOLLOW_RANGE).getValue()) {
                 entity.killEntity();
             }
-        } else {
-            isAwayFromArea = false;
+        }
+        if (!isAwayFromArea && entity.getRandom().nextInt(randomInterval) == 0) {
             for (int i = 0; i <= 100; i++) { // 거의 무한
                 targetLoc = area.getRandomLocation();
                 if (entityLoc.distance(targetLoc) <= 10 && !area.isAwayFromArea(targetLoc)) { // TODO: 이부분 보완. 랜덤으로 주변 위치 얻는 메소드로 변경해야 할 듯. Vec3D vec3d = RandomPositionGenerator.a(this.entity, 5, 4);  // 자신 근처 아무데나 위치?
@@ -52,7 +52,7 @@ public class PathfinderGoalStrollInSpecificArea<T extends EntityCreature & Custo
             }
         }
         Navigation navigation = (Navigation) entity.getNavigation();
-        navigation.a(true); // canOpenDoors. b(): canPassDoors, c(): canFloat   .  PathfinderGoalOpenDoor과 함께 있어야 작동하는 듯?
+        navigation.a(true); // canOpenDoors. b(): canPassDoors, c(): canFloat.  PathfinderGoalOpenDoor과 함께 있어야 작동하는 듯?
         goalPath = navigation.a(targetLoc.getX(), targetLoc.getY(), targetLoc.getZ());
         return true;
     }
@@ -65,7 +65,11 @@ public class PathfinderGoalStrollInSpecificArea<T extends EntityCreature & Custo
 
     @Override
     public void c() {  // start()
-        entity.getNavigation().a(goalPath, speed);
+        if (!isAwayFromArea) {
+            entity.getNavigation().a(goalPath, speed);
+        } else {
+            entity.getNavigation().a(goalPath, speed*1.2);
+        }
     }
 
     @Override

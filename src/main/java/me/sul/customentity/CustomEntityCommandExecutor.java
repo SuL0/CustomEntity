@@ -31,8 +31,8 @@ public class CustomEntityCommandExecutor implements Listener, CommandExecutor {
 
         Location playerLoc = p.getLocation();
         Location targetedLoc  = p.getTargetBlock(Collections.singleton(Material.AIR), 40).getLocation().add(0, 1, 0);
-        EntityScav entityScav = new EntityScav(AreaMap.getSpawnArea("테스트장2"));
-        entityScav.getBukkitEntity().setGlowing(true);
+        EntityScav entityScav = new EntityScav(AreaMap.getSpawnArea("스폰"));
+//        entityScav.getBukkitEntity().setGlowing(true);
 
         return true;
     }

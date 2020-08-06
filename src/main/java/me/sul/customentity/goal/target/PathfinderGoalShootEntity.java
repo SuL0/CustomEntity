@@ -5,6 +5,7 @@ import me.sul.customentity.entity.CustomEntity;
 import me.sul.customentity.entity.EntityScav;
 import me.sul.customentity.entityweapon.EntityCrackShotWeapon;
 import net.minecraft.server.v1_12_R1.*;
+import org.bukkit.Bukkit;
 import org.bukkit.event.entity.EntityTargetEvent;
 
 import javax.annotation.Nullable;
@@ -63,32 +64,36 @@ public class PathfinderGoalShootEntity<T extends EntityCreature & CustomEntity, 
 
         EntityLiving target = null;
         if (targetType == EntityPlayer.class) {
-            target = entity.world.a(entity.locX, entity.locY + (double) entity.getHeadHeight(), entity.locZ, getFollowDistance(), getFollowDistance(), null, (Predicate<EntityHuman>) predicate); // getNearestPlayer
+            // 이거 그냥 근처 플레이어 반환하는거 직접 구현하는게 좋아보이는데.
+            // 가장 가까이 있는 적을 한명만 반환하는데 그 적이 몹 시선에선 볼 수 없는 곳에 있으면 어떡할건데?
+            // + 그 플레이어가 데미지를 입는 상태인지 확인해야함 (god, gm1) - if (target instanceof EntityHuman && ((EntityHuman)target).abilities.isInvulnerable) < 근데 이거 의미없는 것 같은데
+            EntityLiving nearPlayer = entity.world.a(entity.locX, entity.locY + (double) entity.getHeadHeight(), entity.locZ, getFollowDistance(), getFollowDistance(), null, (Predicate<EntityHuman>) predicate); // getNearestPlayer
+            if (nearPlayer != null && nearPlayer.isAlive() && entity.getEntitySenses().a(nearPlayer)) {
+                target = nearPlayer;
+            }
         } else {
             List<U> entityList = entity.world.a(targetType, getTargetSearchArea(getFollowDistance()), predicate);  // getNearestLoadedEntity. i(): getFollowRange()
             if (!entityList.isEmpty()) {
                 entityList.sort(distanceComparator);
-                target = entityList.get(0);
+                for (EntityLiving nearEntity : entityList) {
+                    if (nearEntity.isAlive() && entity.getEntitySenses().a(nearEntity)) {
+                        target = nearEntity;
+                    }
+                }
             }
         }
 
         if (target != null) {
-            if (entity.getEntitySenses().a(target)) {
-                if (targetType == EntityPlayer.class) {
-                    entity.setGoalTarget(target, EntityTargetEvent.TargetReason.CLOSEST_PLAYER, true);
-                } else {
-                    entity.setGoalTarget(target, EntityTargetEvent.TargetReason.CLOSEST_ENTITY, true);
-                }
-                return true;
-            }
+            entity.setGoalTarget(target, (targetType == EntityPlayer.class) ? EntityTargetEvent.TargetReason.CLOSEST_PLAYER : EntityTargetEvent.TargetReason.CLOSEST_ENTITY, true);
+            return true;
         }
         return false;
     }
 
     public boolean b() {  // canContinueToUse();
         EntityLiving target = this.entity.getGoalTarget();
-        if (target == null || !target.isAlive()) return false;
-        if (target instanceof EntityHuman && ((EntityHuman)target).abilities.isInvulnerable) return false;
+        if (target == null || !target.isAlive()) { return false; }
+        if (target instanceof EntityHuman && ((EntityHuman)target).abilities.isInvulnerable) { return false; } // 이거 위에 타게팅 기준에도 넣어야하나?
 
         double followRange = getFollowDistance();
         if (this.entity.h(target) > followRange * followRange) return false; // distanceToSqr
@@ -115,7 +120,7 @@ public class PathfinderGoalShootEntity<T extends EntityCreature & CustomEntity, 
 
     @Override
     public void d() {  // stop()
-        this.entity.setGoalTarget(null, EntityTargetEvent.TargetReason.FORGOT_TARGET, true);
+        entity.setGoalTarget(null, EntityTargetEvent.TargetReason.FORGOT_TARGET, true);
         entity.setSeeingTarget(false);
         fireDelayCnt = 0;
         if (isHoldingBow()) {

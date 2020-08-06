@@ -2,15 +2,17 @@ package me.sul.customentity.entityweapon;
 
 import com.shampaggon.crackshot.CSDirector;
 import me.sul.customentity.entity.EntityScav;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.util.Vector;
 
 public class ProjectileListener implements Listener {
     // 엔티티가 쏜 총알에 맞았을 때
-    @EventHandler
+    @EventHandler(priority = EventPriority.LOWEST)
     public void onDamage(EntityDamageByEntityEvent e) {
         if (e.isCancelled()) return;
         Entity damager = e.getDamager();
@@ -26,7 +28,7 @@ public class ProjectileListener implements Listener {
             double damage = projectile.getMetadata(EntityCrackShotWeapon.PROJ_DAMAGE_META).get(0).asDouble();
             Vector knockbackVector = victim.getLocation().toVector().subtract(((Entity) projectile.getShooter()).getLocation().toVector()).normalize().multiply(0.3);
             CSDirector.getInstance().setTempVulnerability((LivingEntity) victim);
-            ((Damageable) victim).damage(damage);
+            e.setDamage(damage);
             victim.setVelocity(knockbackVector);
         }
     }

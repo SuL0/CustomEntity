@@ -1,13 +1,10 @@
 package me.sul.customentity.entity;
 
 import me.sul.customentity.util.CustomEntityRegistry;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Projectile;
+import org.bukkit.craftbukkit.v1_12_R1.entity.CraftEntity;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityCombustEvent;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.world.ChunkLoadEvent;
 
 // 몹 번호: https://pastebin.com/gPci2Kt0
@@ -22,19 +19,11 @@ public class EntityManager implements Listener {
     }
 
     
-    // TODO: 아래 두개 주석 제거 (테스트용으로 모두 불에 타지 않게 해놓았음)
+    // TODO: 추후에 주석 제거. 테스트용으로 모두 불에 타지 않게 해놓았음
     @EventHandler
     public void onCombust(EntityCombustEvent e) {
-//        if (e.getEntityType() == EntityType.SKELETON) { // 왜 getEntity instanceof EntityScav하면 안되지? -> BukkitEntity로 바뀌었기 때문임.
+//        if (((CraftEntity)e.getEntity()).getHandle() instanceof EntityScav) { // 무조건 nmsEntity로 변경시켜서 instanceof EntityScav 해야함
             e.setCancelled(true);
 //        }
     }
-
-    @EventHandler
-    public void onDeath(EntityDeathEvent e) {
-//        if (e.getEntityType() == EntityType.SKELETON) { // 죽은 몹은 Entity를 가져올 수가 없음
-            e.getDrops().clear();
-//        }
-    }
-
 }

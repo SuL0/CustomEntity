@@ -1,5 +1,6 @@
 package me.sul.customentity.entity;
 
+import com.comphenix.protocol.wrappers.WrappedGameProfile;
 import me.libraryaddict.disguise.disguisetypes.PlayerDisguise;
 import me.sul.customentity.goal.PathfinderGoalMoveInBattle;
 import me.sul.customentity.goal.PathfinderGoalStrollInSpecificArea;
@@ -10,8 +11,13 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.craftbukkit.v1_12_R1.CraftWorld;
 
+import java.util.UUID;
+
 // NOTE: 이상하게 r() 호출 후 생성자 호출됨
 public class EntityScav extends EntitySkeleton implements CustomEntity {
+    private static final String ENTITY_NAME = "§c§lAI BOT";
+    private static final int FOLLOW_RANGE  = 50;
+
     private final Area area;
     private boolean isSeeingTarget = false;
 
@@ -27,14 +33,13 @@ public class EntityScav extends EntitySkeleton implements CustomEntity {
 
     private void initializeEntity(Location loc) {
         setPosition(loc.getX(), loc.getY(), loc.getZ());
-        setCustomName("§cScav");
+        setCustomName(ENTITY_NAME);
         setCustomNameVisible(true);
-        getAttributeInstance(GenericAttributes.ATTACK_DAMAGE).setValue(15);
-        getAttributeInstance(GenericAttributes.FOLLOW_RANGE).setValue(50);
-//        ((org.bukkit.entity.LivingEntity)getBukkitEntity()).getEquipment().setItemInMainHand(new org.bukkit.inventory.ItemStack(Material.DIAMOND_PICKAXE, 1, (short)2));
-        ((org.bukkit.entity.LivingEntity)getBukkitEntity()).getEquipment().setItemInMainHand(new org.bukkit.inventory.ItemStack(Material.BOW, 1));
+        getAttributeInstance(GenericAttributes.FOLLOW_RANGE).setValue(FOLLOW_RANGE);
+        ((org.bukkit.entity.LivingEntity)getBukkitEntity()).getEquipment().setItemInMainHand(new org.bukkit.inventory.ItemStack(Material.DIAMOND_PICKAXE, 1, (short)2));
+//        ((org.bukkit.entity.LivingEntity)getBukkitEntity()).getEquipment().setItemInMainHand(new org.bukkit.inventory.ItemStack(Material.BOW, 1));
         // TODO: 재생효과 추가
-        PlayerDisguise playerDisguise = new PlayerDisguise("§c§lAI BOT");
+        PlayerDisguise playerDisguise = new PlayerDisguise(ENTITY_NAME, "DeathSimo46");
         playerDisguise.setEntity(this.getBukkitEntity());
         playerDisguise.startDisguise();
         registerGoalSelector();
@@ -54,8 +59,8 @@ public class EntityScav extends EntitySkeleton implements CustomEntity {
         // 2가 start() 후 1이 start() -> 2는 중단됨
 
         // 2 -> 1순으로 실행돼야 함. 안 그러면, 2가 start()되고나서 1이 start()되면, 1의 start()에서 goal이 선택되고, 2의 stop()에서 goal이 삭제되버림.
-        targetSelector.a(2, new PathfinderGoalShootEntity<>(this, EntityMonster.class, 4, 4F, 2.0F, 5));
-        targetSelector.a(1, new PathfinderGoalShootEntity<>(this, EntityPlayer.class, 4, 4F, 2.0F, 5));
+        targetSelector.a(2, new PathfinderGoalShootEntity<>(this, EntityMonster.class, 3, 4F, 5.0F, 5));
+        targetSelector.a(1, new PathfinderGoalShootEntity<>(this, EntityPlayer.class, 3, 4F, 5.0F, 5));
     }
 
     @Override
