@@ -4,19 +4,25 @@ import com.google.common.base.Predicate;
 import me.sul.customentity.entity.CustomEntity;
 import me.sul.customentity.entity.EntityScav;
 import me.sul.customentity.entityweapon.EntityCrackShotWeapon;
+import me.sul.customentity.util.DistanceComparator;
 import net.minecraft.server.v1_12_R1.*;
 import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
+import org.bukkit.Location;
+import org.bukkit.craftbukkit.v1_12_R1.entity.CraftEntity;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityTargetEvent;
+import org.bukkit.util.Vector;
 
 import javax.annotation.Nullable;
-import java.util.Comparator;
 import java.util.List;
 
 // PathfinderGoalNearestAttackableTarget 기반
-public class PathfinderGoalShootEntity<T extends EntityCreature & CustomEntity, U extends EntityLiving> extends PathfinderGoal {
+public class PathfinderGoalFindEntityAndShootIt<T extends EntityCreature & CustomEntity, U extends EntityLiving> extends PathfinderGoal {
     private final T entity;
     protected final Class<U> targetType;
-    private final boolean mustSee = true;
     private final int fireDelay;
     private final float projDamage;
     private final float projSpread;
@@ -24,16 +30,17 @@ public class PathfinderGoalShootEntity<T extends EntityCreature & CustomEntity, 
     private final int randomInterval;
 
     private final Predicate<U> predicate;
-    private final DistanceComparator distanceComparator;
+    private final DistanceComparator.Nms nmsDistanceComparator;
+    private final DistanceComparator.Bukkit bukkitDistanceComparator;
 
     private final int unseenMemoryTicks;
     private int unseenTicks = 0;
     private int fireDelayCnt = 0;
 
-    public PathfinderGoalShootEntity(T nmsCreature, Class<U> targetType, int fireDelay, float projDamage, float projSpread, int projSpeed) {
+    public PathfinderGoalFindEntityAndShootIt(T nmsCreature, Class<U> targetType, int fireDelay, float projDamage, float projSpread, int projSpeed) {
         this(nmsCreature, targetType, fireDelay, projDamage, projSpread, projSpeed, 100, 3);
     }
-    public PathfinderGoalShootEntity(T nmsCreature, Class<U> targetType, int fireDelay, float projDamage, float projSpread, int projSpeed, int unseenMemoryTicks, int randomInterval) {
+    public PathfinderGoalFindEntityAndShootIt(T nmsCreature, Class<U> targetType, int fireDelay, float projDamage, float projSpread, int projSpeed, int unseenMemoryTicks, int randomInterval) {
         this.entity = nmsCreature;
         this.targetType = targetType;
         this.fireDelay = fireDelay;
@@ -53,7 +60,8 @@ public class PathfinderGoalShootEntity<T extends EntityCreature & CustomEntity, 
             }
         };
 
-        this.distanceComparator = new DistanceComparator(entity);
+        this.nmsDistanceComparator = new DistanceComparator.Nms(entity);
+        this.bukkitDistanceComparator = new DistanceComparator.Bukkit(entity.getBukkitEntity());
         this.a(1);
     }
 
@@ -62,27 +70,7 @@ public class PathfinderGoalShootEntity<T extends EntityCreature & CustomEntity, 
     public boolean a() {  // canUse()
         if (entity.getRandom().nextInt(randomInterval) != 0) return false;
 
-        EntityLiving target = null;
-        if (targetType == EntityPlayer.class) {
-            // 이거 그냥 근처 플레이어 반환하는거 직접 구현하는게 좋아보이는데.
-            // 가장 가까이 있는 적을 한명만 반환하는데 그 적이 몹 시선에선 볼 수 없는 곳에 있으면 어떡할건데?
-            // + 그 플레이어가 데미지를 입는 상태인지 확인해야함 (god, gm1) - if (target instanceof EntityHuman && ((EntityHuman)target).abilities.isInvulnerable) < 근데 이거 의미없는 것 같은데
-            EntityLiving nearPlayer = entity.world.a(entity.locX, entity.locY + (double) entity.getHeadHeight(), entity.locZ, getFollowDistance(), getFollowDistance(), null, (Predicate<EntityHuman>) predicate); // getNearestPlayer
-            if (nearPlayer != null && nearPlayer.isAlive() && entity.getEntitySenses().a(nearPlayer)) {
-                target = nearPlayer;
-            }
-        } else {
-            List<U> entityList = entity.world.a(targetType, getTargetSearchArea(getFollowDistance()), predicate);  // getNearestLoadedEntity. i(): getFollowRange()
-            if (!entityList.isEmpty()) {
-                entityList.sort(distanceComparator);
-                for (EntityLiving nearEntity : entityList) {
-                    if (nearEntity.isAlive() && entity.getEntitySenses().a(nearEntity)) {
-                        target = nearEntity;
-                    }
-                }
-            }
-        }
-
+        EntityLiving target = getAppropriateTarget(entity);
         if (target != null) {
             entity.setGoalTarget(target, (targetType == EntityPlayer.class) ? EntityTargetEvent.TargetReason.CLOSEST_PLAYER : EntityTargetEvent.TargetReason.CLOSEST_ENTITY, true);
             return true;
@@ -98,12 +86,10 @@ public class PathfinderGoalShootEntity<T extends EntityCreature & CustomEntity, 
         double followRange = getFollowDistance();
         if (this.entity.h(target) > followRange * followRange) return false; // distanceToSqr
 
-        if (mustSee) {
-            if (this.entity.getEntitySenses().a(target)) {
-                unseenTicks = 0;
-            } else if (++unseenTicks > unseenMemoryTicks) {
-                return false;
-            }
+        if (this.entity.getEntitySenses().a(target)) {
+            unseenTicks = 0;
+        } else if (++unseenTicks > unseenMemoryTicks) {
+            return false;
         }
 
         return true;
@@ -146,22 +132,46 @@ public class PathfinderGoalShootEntity<T extends EntityCreature & CustomEntity, 
         return this.entity.getBoundingBox().grow(d, 4.0D, d);
     }
 
-    private static class DistanceComparator implements Comparator<Entity> {
-        private final Entity entity;
-        public DistanceComparator(Entity entity) {
-            this.entity = entity;
-        }
-        public int compare(Entity entity1, Entity entity2) {
-            double distance1 = this.entity.h(entity1);
-            double distance2 = this.entity.h(entity2);
-            return Double.compare(distance1, distance2);
-        }
-    }
+
 
     private boolean isHoldingBow() { return !this.entity.getItemInMainHand().isEmpty() && this.entity.getItemInMainHand().getItem() == Items.BOW; }
 
     private double getFollowDistance() {
         AttributeInstance attribute = this.entity.getAttributeInstance(GenericAttributes.FOLLOW_RANGE);
         return attribute == null ? 16.0D : attribute.getValue();
+    }
+
+
+    // 벡터 내적. p의 벡터에 대해서 파라미터의 벡터가 얼마만큼의 도움을 줄 수 있는가?
+    // aVec와 bVec 내적 = aVec크기 * bVec크기 * cos(세타)
+    // -> 세타 = acos(aVec와 bVec내적 / aVec크기 * bVec크기)
+    // TODO: 우선순위 - 나를 때린 사람 -> 7칸 안 엔티티(시야각 무시?, 사람 > 몹) -> 사람 -> 몹
+    private EntityLiving getAppropriateTarget(EntityLiving nmsEntity) {
+        Entity bukkitEntity = nmsEntity.getBukkitEntity();
+        Location entityLoc = bukkitEntity.getLocation();
+        Vector entitySightVector = bukkitEntity.getLocation().getDirection();
+        double followDistance = getFollowDistance();
+
+        List<Entity> nearEntityList = bukkitEntity.getNearbyEntities(followDistance, followDistance, followDistance);
+        nearEntityList.sort(bukkitDistanceComparator);
+        Entity appropriateTarget = null;
+        for (Entity nearEntity : nearEntityList) {
+            if (!(nearEntity instanceof LivingEntity)) continue;
+
+            Vector entityToNearEntityVector = nearEntity.getLocation().toVector().subtract(entityLoc.toVector());
+            double angle = getAngleBetweenTwoVectors(entitySightVector, entityToNearEntityVector);
+
+            if (angle <= 65 && ((LivingEntity)bukkitEntity).hasLineOfSight(nearEntity)) {
+                if (nearEntity.isDead() || ((CraftEntity)nearEntity).getHandle() instanceof EntityScav || nearEntity.isInvulnerable()) break;
+                if (nearEntity instanceof Player && ((Player)nearEntity).getGameMode() != GameMode.SURVIVAL) break;
+
+                appropriateTarget = nearEntity;
+            }
+        }
+        return (appropriateTarget != null) ? (EntityLiving) ((CraftEntity)appropriateTarget).getHandle() : null;
+    }
+    private double getAngleBetweenTwoVectors(Vector aVec, Vector bVec) {
+        double cosAngle = (aVec.clone().dot(bVec)) / (aVec.length() * bVec.length());
+        return Math.toDegrees(Math.acos(cosAngle)); // acos만 하면 라디안이 나와서 각도로 변환해야 함
     }
 }
