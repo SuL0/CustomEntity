@@ -46,18 +46,15 @@ public class EntityScav extends EntitySkeleton implements CustomEntity {
         goalSelector.a(1, new PathfinderGoalFloat(this));
         goalSelector.a(2, new PathfinderGoalOpenDoor(this, false));
         goalSelector.a(4, new PathfinderGoalMoveInBattle<EntityScav>(this, 1.0D, 15.0F));
-//        goalSelector.a(5, new PathfinderGoalStrollInSpecificArea<EntityScav>(this, area, 1.0F, 45));
-//        goalSelector.a(6, new PathfinderGoalLookAtPlayer(this, EntityHuman.class, 8.0F));
-//        goalSelector.a(6, new PathfinderGoalRandomLookaround(this));
+        goalSelector.a(5, new PathfinderGoalStrollInSpecificArea<EntityScav>(this, area, 1.0F, 45));
+        goalSelector.a(6, new PathfinderGoalRandomLookaround(this));
     }
     private void registerTargetSelector() {
         // priority 1이 start()됐을 때 -> 2 또한 canUse() 중단
         // priority 2가 start()됐을 때 -> 1은 canUse() 계속 실행중
         // 2가 start() 후 1이 start() -> 2는 중단됨
 
-        // 2 -> 1순으로 실행돼야 함. 안 그러면, 2가 start()되고나서 1이 start()되면, 1의 start()에서 goal이 선택되고, 2의 stop()에서 goal이 삭제되버림.
-        targetSelector.a(2, new PathfinderGoalFindEntityAndShootIt<>(this, EntityMonster.class, 3, 4F, 5.0F, 5));
-        targetSelector.a(1, new PathfinderGoalFindEntityAndShootIt<>(this, EntityPlayer.class, 3, 4F, 5.0F, 5));
+        targetSelector.a(1, new PathfinderGoalFindEntityAndShootIt<>(this, 3, 4F, 5.0F, 5));
     }
 
     @Override
