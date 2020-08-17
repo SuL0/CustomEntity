@@ -9,6 +9,7 @@ import org.bukkit.Material;
 import org.bukkit.craftbukkit.v1_12_R1.CraftWorld;
 
 // NOTE: 이상하게 r() 호출 후 생성자 호출됨
+// TODO: 50칸 밖의 EntityScav는 안보이도록 설정
 public class EntityScav extends EntitySkeleton implements CustomEntity {
     private static final String ENTITY_NAME = "§c§lAI BOT";
     private static final int FOLLOW_RANGE  = 50;

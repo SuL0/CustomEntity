@@ -15,6 +15,7 @@ import org.bukkit.event.entity.EntityTargetEvent;
 import org.bukkit.util.Vector;
 
 import javax.annotation.Nullable;
+import java.lang.reflect.Field;
 import java.util.List;
 
 // PathfinderGoalNearestAttackableTarget 기반
@@ -36,6 +37,7 @@ public class PathfinderGoalFindEntityAndShootIt<T extends EntityCreature & Custo
     private int fireDelayCnt = 0;
     private int cntForCanContinueToUse = 0;
     private Location lastSeenLocation;
+    boolean strafingClockwise = false;
 
 
     private static final int INTERVAL_OF_RE_SEARCH_TARGET = 10;
@@ -93,6 +95,7 @@ public class PathfinderGoalFindEntityAndShootIt<T extends EntityCreature & Custo
 
     public void stop() {
         setGoalTarget(null);
+        nmsEntity.getNavigation().p();
         fireDelayCnt = 0;
         if (isHoldingBow()) {
             this.nmsEntity.cN(); // stopUsingItem()
@@ -116,10 +119,19 @@ public class PathfinderGoalFindEntityAndShootIt<T extends EntityCreature & Custo
         EntityLiving goalTarget = nmsEntity.getGoalTarget();
         nmsEntity.getControllerLook().a(goalTarget, 30.0F, 30.0F);  // setLookAt
         if (unseenTicks == 0) {
-            lastSeenLocation = goalTarget.getBukkitEntity().getLocation();
-            boolean strafingClockwise = false;
             nmsEntity.getNavigation().p();
-            nmsEntity.getControllerMove().a(0.0F, strafingClockwise ? 0.5F : -0.5F);  // strafe. 거리에서 멀어지면 뛰는것도 내장돼있음
+            lastSeenLocation = goalTarget.getBukkitEntity().getLocation();
+            if (nmsEntity.getRandom().nextFloat() < 0.05D) {
+                strafingClockwise = !strafingClockwise;
+            }
+            try {
+                nmsEntity.getControllerMove().a(0.0F, strafingClockwise ? 0.5F : -0.5F);  // strafe.
+                Field speed = nmsEntity.getControllerMove().getClass().getDeclaredField("e");
+                speed.setAccessible(true);
+                speed.setDouble(nmsEntity.getControllerMove(), 0.5D);
+                speed.setAccessible(false);
+            } catch (NoSuchFieldException | IllegalAccessException ignored) { }
+            nmsEntity.a(goalTarget, 30.0F, 30.0F); // lookAt - 얘가 더 빠르게 고개를 돌림
         } else if (unseenTicks == INTERVAL_OF_RE_SEARCH_TARGET) { // 목표를 놓치고 딱 한 번 실행
 //            nmsEntity.getControllerMove().a(0.0F, 0.0F);
             // 모든 움직임은 사실 ControllerMove에서 관리함(Navigation 포함).
@@ -130,6 +142,8 @@ public class PathfinderGoalFindEntityAndShootIt<T extends EntityCreature & Custo
             
             // TODO: 이렇게 이동한 후 최소한 5초는 두리번거리도록 나두는게 좋을 것 같은데?
             // eg) 지정 구역 넘어갔을 때도 포함
+        } else if (unseenTicks > INTERVAL_OF_RE_SEARCH_TARGET && nmsEntity.getNavigation().o()) {
+            unseenTicks = maxUnseenMemoryTicks;
         }
     }
 
@@ -163,7 +177,7 @@ public class PathfinderGoalFindEntityAndShootIt<T extends EntityCreature & Custo
     // NOTE: 0. 나를 공격한 엔티티
     //       1. 보이는 가장 가까운 플레이어
     //       2. 보이거나 없어진 현재 타게팅된 엔티티
-    //       3. 5칸 안의 가장 가까운 몹
+    //       3. 5칸 안의 가장 가까운 엔티티
     //       4. 보이는 가장 가까운 몹
     private TargetEntity getAppropriateTarget() {
         double followDistance = getFollowDistance();
@@ -198,9 +212,9 @@ public class PathfinderGoalFindEntityAndShootIt<T extends EntityCreature & Custo
                 return new TargetEntity(2, true, currentNmsTarget);
             }
         }
-        // 3. 5칸 안의 가장 가까운 몹
+        // 3. 5칸 안의 가장 가까운 엔티티
         for (Entity nearBukkitEntity : nearBukkitEntityList) {
-            if (nearBukkitEntity instanceof Monster) {
+            if (nearBukkitEntity instanceof LivingEntity) {
                 if (bukkitEntity.getLocation().distance(nearBukkitEntity.getLocation()) <= 5 && ((LivingEntity)bukkitEntity).hasLineOfSight(nearBukkitEntity)) {
                     return new TargetEntity(3, false, (EntityLiving) ((CraftEntity) nearBukkitEntity).getHandle());
                 }
