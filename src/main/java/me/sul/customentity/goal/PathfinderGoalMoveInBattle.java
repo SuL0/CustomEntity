@@ -33,13 +33,11 @@ public class PathfinderGoalMoveInBattle<T extends EntityCreature & CustomEntity>
 
     @Override
     public void c() { // start()
-        super.c();
 //        ((IRangedEntity)mob).p(true); // setSwingingArms(true). IRangedEntity중 SkeletonAbstract에만 있는 DataWatcher값. 대체 뭐하는건지 모르겠음.
     }
 
     @Override
     public void d() { // stop()
-        super.d();
 //        ((IRangedEntity)mob).p(false); // start()쪽의 설명과 같음
         this.seeTime = 0;
     }
@@ -63,10 +61,10 @@ public class PathfinderGoalMoveInBattle<T extends EntityCreature & CustomEntity>
             // 이부분 수정해야할 듯
             // PathfinderGoalShootEntity가 지금 현재 몹을 보고 총을 쏘고 있는지 여부를 알 수 있는 Method가 필요함
             if (distanceBetweenMobAndTarget <= (double)this.attackRadiusSqr && this.seeTime >= 20) {
-                this.entity.getNavigation().p();
+                this.entity.getNavigation().p(); // navigation stop
                 ++this.strafingTime;
             } else {
-                this.entity.getNavigation().a(goalTarget, this.speedModifier);
+                this.entity.getNavigation().a(goalTarget, this.speedModifier);  // moveTo
                 this.strafingTime = -1;
             }
 
@@ -89,10 +87,10 @@ public class PathfinderGoalMoveInBattle<T extends EntityCreature & CustomEntity>
                     this.strafingBackwards = true;
                 }
 
-                this.entity.getControllerMove().a(this.strafingBackwards ? -0.5F : 0.5F, this.strafingClockwise ? 0.5F : -0.5F);
-                this.entity.a(goalTarget, 30.0F, 30.0F);
+                this.entity.getControllerMove().a(this.strafingBackwards ? -0.5F : 0.5F, this.strafingClockwise ? 0.5F : -0.5F);  // strafe. 이게 스켈레톤 무빙 메소드인 듯
+                this.entity.a(goalTarget, 30.0F, 30.0F);  // lookAt - 이거 왠지 deprecapted같은데?
             } else {
-                this.entity.getControllerLook().a(goalTarget, 30.0F, 30.0F);
+                this.entity.getControllerLook().a(goalTarget, 30.0F, 30.0F);  // setLookAt  위에랑 차이점이 뭔지는 모르겠음
             }
         }
     }

@@ -1,4 +1,4 @@
-package me.sul.customentity.goal.target;
+package me.sul.customentity.goal;
 
 import net.minecraft.server.v1_12_R1.EntityLiving;
 

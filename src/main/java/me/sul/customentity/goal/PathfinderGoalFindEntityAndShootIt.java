@@ -1,16 +1,12 @@
-package me.sul.customentity.goal.target;
+package me.sul.customentity.goal;
 
 import me.sul.customentity.entity.CustomEntity;
-import me.sul.customentity.entity.EntityScav;
 import me.sul.customentity.entityweapon.EntityCrackShotWeapon;
 import me.sul.customentity.util.DistanceComparator;
 import net.minecraft.server.v1_12_R1.*;
-import net.sf.cglib.asm.$ByteVector;
-import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
+import org.bukkit.Location;
 import org.bukkit.craftbukkit.v1_12_R1.entity.CraftEntity;
-import org.bukkit.craftbukkit.v1_12_R1.entity.CraftLivingEntity;
-import org.bukkit.craftbukkit.v1_12_R1.entity.CraftPlayer;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Monster;
@@ -39,6 +35,10 @@ public class PathfinderGoalFindEntityAndShootIt<T extends EntityCreature & Custo
     private int unseenTicks = 0;
     private int fireDelayCnt = 0;
     private int cntForCanContinueToUse = 0;
+    private Location lastSeenLocation;
+
+
+    private static final int INTERVAL_OF_RE_SEARCH_TARGET = 10;
 
     public PathfinderGoalFindEntityAndShootIt(T nmsCreature, int fireDelay, float projDamage, float projSpread, int projSpeed) {
         this(nmsCreature, fireDelay, projDamage, projSpread, projSpeed, 100, 3);
@@ -56,10 +56,18 @@ public class PathfinderGoalFindEntityAndShootIt<T extends EntityCreature & Custo
         this.bukkitDistanceComparator = new DistanceComparator.Bukkit(nmsEntity.getBukkitEntity());
         this.a(1);
     }
-
-    // 항상 a()가 돌고있음
     @Override
-    public boolean a() {  // canUse()
+    public boolean a() { return canUse(); }
+    @Override
+    public boolean b() { return canContinueToUse(); }
+    @Override
+    public void c() { start(); }
+    @Override
+    public void d() { stop(); }
+    @Override
+    public void e() { tick(); }
+
+    public boolean canUse() {
         if (nmsEntity.getRandom().nextInt(randomInterval) != 0) return false;
 
         TargetEntity targetEntity = getAppropriateTarget();
@@ -67,9 +75,9 @@ public class PathfinderGoalFindEntityAndShootIt<T extends EntityCreature & Custo
         return (targetEntity != null);
     }
 
-    public boolean b() {  // canContinueToUse();
+    public boolean canContinueToUse() {
         if (cntForCanContinueToUse == Integer.MAX_VALUE) cntForCanContinueToUse = 0;
-        if (++cntForCanContinueToUse % 10 == 0 || !isInTargetableState(nmsEntity.getGoalTarget())) { // + 원래 유지하던 타겟이 공격할 수 없는 상태가 되면, 바로 다른 타겟을 찾아봄.
+        if (++cntForCanContinueToUse % INTERVAL_OF_RE_SEARCH_TARGET == 0 || !isInTargetableState(nmsEntity.getGoalTarget())) { // + 원래 유지하던 타겟이 공격할 수 없는 상태가 되면, 바로 다른 타겟을 찾아봄.
             TargetEntity targetEntity = getAppropriateTarget();
             setGoalTarget(targetEntity);
             return (targetEntity != null);
@@ -77,16 +85,13 @@ public class PathfinderGoalFindEntityAndShootIt<T extends EntityCreature & Custo
         return true;
     }
 
-    @Override
-    public void c() {  // start()
+    public void start() {
         if (isHoldingBow()) {
             nmsEntity.c(EnumHand.MAIN_HAND); // startUsingItem()
         }
     }
 
-
-    @Override
-    public void d() {  // stop()
+    public void stop() {
         setGoalTarget(null);
         fireDelayCnt = 0;
         if (isHoldingBow()) {
@@ -94,19 +99,40 @@ public class PathfinderGoalFindEntityAndShootIt<T extends EntityCreature & Custo
         }
     }
 
-    @Override
-    public void e() {  // tick()
+    public void tick() {  // goalTarget이 무조건 있음.
+        tick_handleWeapon();
+        tick_moving();
+    }
+    private void tick_handleWeapon() {
         EntityLiving target = nmsEntity.getGoalTarget(); // canContinueToUse()에서 걸러주기때문에 null일 수가 없음
-        if (unseenTicks == 0) { // 시야에 타겟이 있는가
-            nmsEntity.setSeeingTarget(true);
+        if (unseenTicks == 0) { // 시야에 타겟이 있을 때
             if (fireDelayCnt % fireDelay == 0) {
                 EntityCrackShotWeapon.fireProjectile(nmsEntity.getBukkitEntity(), target.getBukkitEntity(), projSpread, projSpeed, projDamage);
             }
-        } else {
-            nmsEntity.setSeeingTarget(false);  // ? 이거 왜넣은거지
         }
         fireDelayCnt++;
     }
+    private void tick_moving() {
+        EntityLiving goalTarget = nmsEntity.getGoalTarget();
+        nmsEntity.getControllerLook().a(goalTarget, 30.0F, 30.0F);  // setLookAt
+        if (unseenTicks == 0) {
+            lastSeenLocation = goalTarget.getBukkitEntity().getLocation();
+            boolean strafingClockwise = false;
+            nmsEntity.getNavigation().p();
+            nmsEntity.getControllerMove().a(0.0F, strafingClockwise ? 0.5F : -0.5F);  // strafe. 거리에서 멀어지면 뛰는것도 내장돼있음
+        } else if (unseenTicks == INTERVAL_OF_RE_SEARCH_TARGET) { // 목표를 놓치고 딱 한 번 실행
+//            nmsEntity.getControllerMove().a(0.0F, 0.0F);
+            // 모든 움직임은 사실 ControllerMove에서 관리함(Navigation 포함).
+            // 그렇기에 위의 메소드를 호출하고, Navigation의 moveTo()를 호출하면 위의 메소드가 씹히게됨. 그러므로 아래의 메소드를 직접 사용해줘야함.
+            nmsEntity.p(0.0F);  // strafeForwards
+            nmsEntity.n(0.0F);  // strafeRight
+            nmsEntity.getNavigation().a(lastSeenLocation.getX(), lastSeenLocation.getY(), lastSeenLocation.getZ(), 1.2D);
+            
+            // TODO: 이렇게 이동한 후 최소한 5초는 두리번거리도록 나두는게 좋을 것 같은데?
+            // eg) 지정 구역 넘어갔을 때도 포함
+        }
+    }
+
 
 
     private void setGoalTarget(@Nullable TargetEntity targetEntity) {
@@ -116,7 +142,6 @@ public class PathfinderGoalFindEntityAndShootIt<T extends EntityCreature & Custo
         if (targetEntity == null) {
             if (nmsEntity.getGoalTarget() != null) {
                 nmsEntity.setGoalTarget(null, EntityTargetEvent.TargetReason.CUSTOM, true);
-                nmsEntity.setSeeingTarget(false);
             }
         } else if (!targetEntity.getNmsEntity().equals(nmsEntity.getGoalTarget())) {
             nmsEntity.setGoalTarget(targetEntity.getNmsEntity(), EntityTargetEvent.TargetReason.CUSTOM, true);
@@ -165,7 +190,7 @@ public class PathfinderGoalFindEntityAndShootIt<T extends EntityCreature & Custo
         // 2. 보이거나 없어진 현재 타게팅된 엔티티 // TODO: 따라가게 해야 함
         EntityLiving currentNmsTarget = nmsEntity.getGoalTarget();
         if (currentNmsTarget != null &&isInTargetableState(currentNmsTarget)) {
-            unseenTicks += 10;
+            unseenTicks += INTERVAL_OF_RE_SEARCH_TARGET;
             if (isInSight(currentNmsTarget.getBukkitEntity())) {
                 unseenTicks = 0;
                 return new TargetEntity(2, true, currentNmsTarget);
