@@ -17,7 +17,7 @@ public class TargetEntity {
     public EntityLiving getNmsEntity() {
         return nmsEntity;
     }
-    public boolean isTargetingReasonHaveToMaintainUnseenTicks() {
+    public boolean haveToMaintainUnseenTicks() {
         return haveToMaintainUnseenTicks;
     }
 }
