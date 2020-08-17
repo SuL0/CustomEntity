@@ -2,8 +2,10 @@ package me.sul.customentity.goal;
 
 import me.sul.customentity.entity.CustomEntity;
 import me.sul.customentity.entityweapon.EntityCrackShotWeapon;
+import me.sul.customentity.util.DebugUtil;
 import me.sul.customentity.util.DistanceComparator;
 import net.minecraft.server.v1_12_R1.*;
+import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v1_12_R1.entity.CraftEntity;
@@ -43,7 +45,7 @@ public class PathfinderGoalFindEntityAndShootIt<T extends EntityCreature & Custo
     private static final int INTERVAL_OF_RE_SEARCH_TARGET = 10;
 
     public PathfinderGoalFindEntityAndShootIt(T nmsCreature, int fireDelay, float projDamage, float projSpread, int projSpeed) {
-        this(nmsCreature, fireDelay, projDamage, projSpread, projSpeed, 100, 3);
+        this(nmsCreature, fireDelay, projDamage, projSpread, projSpeed, 100, 5);
     }
     public PathfinderGoalFindEntityAndShootIt(T nmsCreature, int fireDelay, float projDamage, float projSpread, int projSpeed, int maxUnseenMemoryTicks, int randomInterval) {
         this.nmsEntity = nmsCreature;
@@ -128,7 +130,7 @@ public class PathfinderGoalFindEntityAndShootIt<T extends EntityCreature & Custo
                 nmsEntity.getControllerMove().a(0.0F, strafingClockwise ? 0.5F : -0.5F);  // strafe.
                 Field speed = nmsEntity.getControllerMove().getClass().getDeclaredField("e");
                 speed.setAccessible(true);
-                speed.setDouble(nmsEntity.getControllerMove(), 0.5D);
+                speed.setDouble(nmsEntity.getControllerMove(), 0.6D);
                 speed.setAccessible(false);
             } catch (NoSuchFieldException | IllegalAccessException ignored) { }
             nmsEntity.a(goalTarget, 30.0F, 30.0F); // lookAt - 얘가 더 빠르게 고개를 돌림
@@ -138,7 +140,7 @@ public class PathfinderGoalFindEntityAndShootIt<T extends EntityCreature & Custo
             // 그렇기에 위의 메소드를 호출하고, Navigation의 moveTo()를 호출하면 위의 메소드가 씹히게됨. 그러므로 아래의 메소드를 직접 사용해줘야함.
             nmsEntity.p(0.0F);  // strafeForwards
             nmsEntity.n(0.0F);  // strafeRight
-            nmsEntity.getNavigation().a(lastSeenLocation.getX(), lastSeenLocation.getY(), lastSeenLocation.getZ(), 1.2D);
+            nmsEntity.getNavigation().a(lastSeenLocation.getX(), lastSeenLocation.getY(), lastSeenLocation.getZ(), 1.3D);  // TODO: 방벽 들고 돌격
             
             // TODO: 이렇게 이동한 후 최소한 5초는 두리번거리도록 나두는게 좋을 것 같은데?
             // eg) 지정 구역 넘어갔을 때도 포함
@@ -150,7 +152,7 @@ public class PathfinderGoalFindEntityAndShootIt<T extends EntityCreature & Custo
 
 
     private void setGoalTarget(@Nullable TargetEntity targetEntity) {
-        if (targetEntity == null || !targetEntity.isTargetingReasonHaveToMaintainUnseenTicks()) {
+        if (targetEntity == null || !targetEntity.haveToMaintainUnseenTicks()) {
             unseenTicks = 0;
         }
         if (targetEntity == null) {
@@ -184,6 +186,17 @@ public class PathfinderGoalFindEntityAndShootIt<T extends EntityCreature & Custo
 
         List<Entity> nearBukkitEntityList = bukkitEntity.getNearbyEntities(followDistance, followDistance, followDistance);
         nearBukkitEntityList.sort(bukkitDistanceComparator);
+
+        // 타게팅 대상이 될 수 없는 값들은 리스트에서 모두 제거
+        for (Entity nearBukkitEntity: nearBukkitEntityList) {
+            if (!(nearBukkitEntity instanceof LivingEntity)) nearBukkitEntityList.remove(nearBukkitEntity);
+            EntityLiving nearNmsEntity = (EntityLiving) ((CraftEntity)nearBukkitEntity).getHandle();
+            if (nmsEntity.getClass().equals(nearNmsEntity.getClass()) || !isInTargetableState(nearNmsEntity)) {
+                nearBukkitEntityList.remove(nearBukkitEntity);
+            }
+        }
+
+
         // 0. 나를 공격한 엔티티
         if (nmsEntity.hurtTimestamp != checkedHurtTimestamp) {
             checkedHurtTimestamp = nmsEntity.hurtTimestamp;
@@ -201,9 +214,9 @@ public class PathfinderGoalFindEntityAndShootIt<T extends EntityCreature & Custo
                 }
             }
         }
-        // 2. 보이거나 없어진 현재 타게팅된 엔티티 // TODO: 따라가게 해야 함
+        // 2. 보이거나 없어진 현재 타게팅된 엔티티
         EntityLiving currentNmsTarget = nmsEntity.getGoalTarget();
-        if (currentNmsTarget != null &&isInTargetableState(currentNmsTarget)) {
+        if (currentNmsTarget != null && isInTargetableState(currentNmsTarget)) {
             unseenTicks += INTERVAL_OF_RE_SEARCH_TARGET;
             if (isInSight(currentNmsTarget.getBukkitEntity())) {
                 unseenTicks = 0;
@@ -220,7 +233,6 @@ public class PathfinderGoalFindEntityAndShootIt<T extends EntityCreature & Custo
                 }
             }
         }
-        
         // 4. 보이는 가장 가까운 몹
         for (Entity nearBukkitEntity : nearBukkitEntityList) {
             if (nearBukkitEntity instanceof Monster) {
@@ -229,11 +241,13 @@ public class PathfinderGoalFindEntityAndShootIt<T extends EntityCreature & Custo
                 }
             }
         }
+
         // 타겟 없음
         return null;
     }
+
     private boolean isInTargetableState(EntityLiving nmsOpponent) {
-        if (nmsOpponent == null || !nmsOpponent.isAlive() || nmsOpponent.getClass().equals(this.nmsEntity.getClass())) return false;
+        if (nmsOpponent == null || !nmsOpponent.isAlive() || nmsOpponent.getClass().equals(nmsEntity.getClass())) return false;
         if (nmsOpponent instanceof EntityHuman && (((EntityHuman)nmsOpponent).abilities.isInvulnerable || ((Player)nmsOpponent.getBukkitEntity()).getGameMode() != GameMode.SURVIVAL)) return false;
         if (nmsOpponent.getBukkitEntity().getLocation().distance(bukkitEntity.getLocation()) > getFollowDistance()) return false;
         return true;
@@ -245,15 +259,11 @@ public class PathfinderGoalFindEntityAndShootIt<T extends EntityCreature & Custo
         Vector toOpponentVector = bukkitOpponent.getLocation().toVector().subtract(bukkitEntity.getLocation().toVector());
         double angle = getAngleBetweenTwoVectors(sightVector, toOpponentVector);
 
-        if (angle <= 70 && ((LivingEntity)bukkitEntity).hasLineOfSight(bukkitOpponent)) {
-            if (isInTargetableState((EntityLiving)((CraftEntity)bukkitOpponent).getHandle())) {
-                return true;
-            }
-        }
-        return false;
+        return angle <= 70 && ((LivingEntity) bukkitEntity).hasLineOfSight(bukkitOpponent);
     }
     private double getAngleBetweenTwoVectors(Vector aVec, Vector bVec) {
         double cosAngle = (aVec.clone().dot(bVec)) / (aVec.length() * bVec.length());
         return Math.toDegrees(Math.acos(cosAngle)); // acos만 하면 라디안이 나와서 각도로 변환해야 함
     }
+
 }
