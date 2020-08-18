@@ -3,6 +3,7 @@ package me.sul.customentity.goal;
 import me.sul.customentity.entity.CustomEntity;
 import me.sul.customentity.spawnarea.Area;
 import net.minecraft.server.v1_12_R1.*;
+import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 
 // PathfinderGoalMoveThroughVillage 기반. private 메소드 오버라이딩 못하는 문제로 상속하지 않았음.
@@ -12,7 +13,6 @@ public class PathfinderGoalStrollInSpecificArea<T extends EntityCreature & Custo
     private final Entity bukkitEntity;
     private final Area area;
     private final double speed;
-    private PathEntity goalPath;
     private final int randomInterval;
 
     public PathfinderGoalStrollInSpecificArea(T nmsEntity, Area area, double speed, int randomInterval) {
@@ -42,7 +42,6 @@ public class PathfinderGoalStrollInSpecificArea<T extends EntityCreature & Custo
     @Override
     public void c() {  // start()
         org.bukkit.Location destinationLoc;
-        boolean isAwayFromArea;
         // 지정 구역에서 벗어났을 때
         if (area.isAwayFromArea(bukkitEntity.getLocation())) {
             destinationLoc = area.getClosestLocation(bukkitEntity.getLocation());
@@ -50,20 +49,18 @@ public class PathfinderGoalStrollInSpecificArea<T extends EntityCreature & Custo
                 nmsEntity.killEntity();
                 return;
             }
-            isAwayFromArea = true;
+            moveToLocConsideringDoor(destinationLoc, speed);
         } else {
             destinationLoc = area.getLocationForStroll(bukkitEntity.getLocation(), 5,10);
-            isAwayFromArea = false;
+            moveToLocConsideringDoor(destinationLoc, speed*1.2);
         }
+    }
+
+    private void moveToLocConsideringDoor(Location destinationLoc, double speed) {
         Navigation navigation = (Navigation) nmsEntity.getNavigation();
         navigation.a(true); // canOpenDoors. b(): canPassDoors, c(): canFloat.  PathfinderGoalOpenDoor과 함께 있어야 작동하는 듯?
-        goalPath = navigation.a(destinationLoc.getX(), destinationLoc.getY(), destinationLoc.getZ());
-
-        if (!isAwayFromArea) {
-            nmsEntity.getNavigation().a(goalPath, speed);
-        } else {
-            nmsEntity.getNavigation().a(goalPath, speed*1.2);
-        }
+        PathEntity goalPath = navigation.a(destinationLoc.getX(), destinationLoc.getY(), destinationLoc.getZ());
+        nmsEntity.getNavigation().a(goalPath, speed);
     }
 
     @Override

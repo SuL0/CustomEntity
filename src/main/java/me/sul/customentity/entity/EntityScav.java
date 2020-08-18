@@ -56,7 +56,7 @@ public class EntityScav extends EntitySkeleton implements CustomEntity {
         goalSelector.a(1, new PathfinderGoalFloat(this));
         goalSelector.a(2, new PathfinderGoalOpenDoor(this, false));
         goalSelector.a(4, pathfinderGoalFindEntityAndShootIt);
-        goalSelector.a(5, new PathfinderGoalStrollInSpecificArea<EntityScav>(this, area, 1.0F, 55));
+        goalSelector.a(5, new PathfinderGoalStrollInSpecificArea<>(this, area, 1.0F, 55));
         goalSelector.a(6, new PathfinderGoalRandomLookaround(this, 0.5F));
     }
 
