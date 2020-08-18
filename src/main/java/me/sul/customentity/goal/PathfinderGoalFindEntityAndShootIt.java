@@ -41,14 +41,14 @@ public class PathfinderGoalFindEntityAndShootIt<T extends EntityCreature & Custo
     private int unseenTicks = 0;
     private int fireDelayCnt = 0;
     private int cntForCanContinueToUse = 0;
-    private Location lastSeenLocation;
     boolean strafingClockwise = false;
 
 
     private static final int INTERVAL_OF_RE_SEARCH_TARGET = 10;
+    private static final int CHASE_TICK = 30;
 
     public PathfinderGoalFindEntityAndShootIt(T nmsCreature, int fireDelay, float projDamage, float projSpread, int projSpeed) {
-        this(nmsCreature, fireDelay, projDamage, projSpread, projSpeed, 100, 3);
+        this(nmsCreature, fireDelay, projDamage, projSpread, projSpeed, 250, 3);
     }
     public PathfinderGoalFindEntityAndShootIt(T nmsCreature, int fireDelay, float projDamage, float projSpread, int projSpeed, int maxUnseenMemoryTicks, int randomInterval) {
         this.nmsEntity = nmsCreature;
@@ -126,39 +126,38 @@ public class PathfinderGoalFindEntityAndShootIt<T extends EntityCreature & Custo
     private void tick_moving() {
         EntityLiving goalTarget = nmsEntity.getGoalTarget();
         nmsEntity.getControllerLook().a(goalTarget, 30.0F, 30.0F);  // setLookAt
-        if (unseenTicks == 0) {
-            nmsEntity.getNavigation().p();
-            lastSeenLocation = goalTarget.getBukkitEntity().getLocation();
-            if (nmsEntity.getRandom().nextFloat() < 0.05D) {
-                strafingClockwise = !strafingClockwise;
+        
+        // 몹 탐색 주기(unseenTicks 바뀌는 주기)랑 똑같은 주기를 주었음.
+        if (cntForCanContinueToUse % INTERVAL_OF_RE_SEARCH_TARGET == 0) {
+            if (unseenTicks == 0) {
+                nmsEntity.getNavigation().p();
+                if (nmsEntity.getRandom().nextFloat() < 0.3D) {
+                    strafingClockwise = !strafingClockwise;
+                }
+                try {
+                    nmsEntity.getControllerMove().a(0.0F, strafingClockwise ? 0.5F : -0.5F);  // strafe.
+                    Field speed = nmsEntity.getControllerMove().getClass().getDeclaredField("e");
+                    speed.setAccessible(true);
+                    speed.setDouble(nmsEntity.getControllerMove(), 0.6D);
+                } catch (NoSuchFieldException | IllegalAccessException ignored) { }
+                nmsEntity.a(goalTarget, 30.0F, 30.0F); // lookAt - 얘가 더 빠르게 고개를 돌림
+            } else if (unseenTicks == CHASE_TICK) { // 목표를 놓치고 딱 한 번 실행 - 문에서 치고 빠지는거 안쪽에 있을 때의 좌표를 찍으려고 약간 텀을 두었음
+                // nmsEntity.getControllerMove().a(0.0F, 0.0F);
+                // 모든 움직임은 사실 ControllerMove에서 관리함(Navigation 포함).
+                // 그렇기에 위의 메소드를 호출하고, Navigation의 moveTo()를 호출하면 위의 메소드가 씹히게됨. 그러므로 아래의 메소드를 직접 사용해줘야함.
+                nmsEntity.p(0.0F);  // strafeForwards
+                nmsEntity.n(0.0F);  // strafeRight
+                moveToLocConsideringDoor(goalTarget.getBukkitEntity().getLocation(), 1.3D);  // TODO: 방벽 들고 돌격
+
+            } else if (unseenTicks > CHASE_TICK && nmsEntity.getNavigation().o()) {
+                unseenTicks = maxUnseenMemoryTicks;
             }
-            try {
-                nmsEntity.getControllerMove().a(0.0F, strafingClockwise ? 0.5F : -0.5F);  // strafe.
-                Field speed = nmsEntity.getControllerMove().getClass().getDeclaredField("e");
-                speed.setAccessible(true);
-                speed.setDouble(nmsEntity.getControllerMove(), 0.6D);
-                speed.setAccessible(false);
-            } catch (NoSuchFieldException | IllegalAccessException ignored) { }
-            nmsEntity.a(goalTarget, 30.0F, 30.0F); // lookAt - 얘가 더 빠르게 고개를 돌림
-        } else if (unseenTicks == INTERVAL_OF_RE_SEARCH_TARGET) { // 목표를 놓치고 딱 한 번 실행
-//            nmsEntity.getControllerMove().a(0.0F, 0.0F);
-            // 모든 움직임은 사실 ControllerMove에서 관리함(Navigation 포함).
-            // 그렇기에 위의 메소드를 호출하고, Navigation의 moveTo()를 호출하면 위의 메소드가 씹히게됨. 그러므로 아래의 메소드를 직접 사용해줘야함.
-            nmsEntity.p(0.0F);  // strafeForwards
-            nmsEntity.n(0.0F);  // strafeRight
-            nmsEntity.getNavigation().a(lastSeenLocation.getX(), lastSeenLocation.getY(), lastSeenLocation.getZ(), 1.3D);  // TODO: 방벽 들고 돌격
-            
-            // TODO: 이렇게 이동한 후 최소한 5초는 두리번거리도록 나두는게 좋을 것 같은데?
-            // eg) 지정 구역 넘어갔을 때도 포함
-        } else if (unseenTicks > INTERVAL_OF_RE_SEARCH_TARGET && nmsEntity.getNavigation().o()) {
-            unseenTicks = maxUnseenMemoryTicks;
         }
     }
 
 
-
     private void setGoalTarget(@Nullable TargetEntity targetEntity) {
-        if (targetEntity == null || !targetEntity.haveToMaintainUnseenTicks()) {
+        if (targetEntity == null || targetEntity.resetUnseenTicks()) {
             unseenTicks = 0;
         }
         if (targetEntity == null) {
@@ -170,6 +169,13 @@ public class PathfinderGoalFindEntityAndShootIt<T extends EntityCreature & Custo
             if (targetEntity.haveToAlertOther())
                 alertOthers();
         }
+    }
+
+    private void moveToLocConsideringDoor(Location destinationLoc, double speed) {
+        Navigation navigation = (Navigation) nmsEntity.getNavigation();
+        navigation.a(true); // canOpenDoors. b(): canPassDoors, c(): canFloat.  위치선정을 할 때 문을 열고 가는 것을 고려해서 찍어줌
+        PathEntity goalPath = navigation.a(destinationLoc.getX(), destinationLoc.getY(), destinationLoc.getZ());
+        nmsEntity.getNavigation().a(goalPath, speed);
     }
 
 
@@ -187,7 +193,7 @@ public class PathfinderGoalFindEntityAndShootIt<T extends EntityCreature & Custo
     // NOTE: 0. 나를 공격한 엔티티
     //       1. 보이는 가장 가까운 플레이어
     //       2. 보이거나 없어진 현재 타게팅된 엔티티
-    //       3. 5칸 안의 가장 가까운 엔티티
+    //       3. 6칸 안의 가장 가까운 엔티티
     //       4. 보이는 가장 가까운 몹
     private TargetEntity getAppropriateTarget() {
         double followDistance = getFollowDistance();
@@ -205,7 +211,7 @@ public class PathfinderGoalFindEntityAndShootIt<T extends EntityCreature & Custo
             checkedHurtTimestamp = nmsEntity.hurtTimestamp;
             if (nmsEntity.getLastDamager() != null) {
                 if (isInTargetableState(nmsEntity.getLastDamager())) {
-                    return new TargetEntity(0, false, true, nmsEntity.getLastDamager());
+                    return new TargetEntity(0, true, true, nmsEntity.getLastDamager());
                 }
             }
         }
@@ -213,7 +219,7 @@ public class PathfinderGoalFindEntityAndShootIt<T extends EntityCreature & Custo
         for (Entity nearBukkitEntity : nearBukkitEntityList) {
             if (nearBukkitEntity instanceof Player) {
                 if (isInSight(nearBukkitEntity)) {
-                    return new TargetEntity(1, false, true, (EntityLiving) ((CraftEntity) nearBukkitEntity).getHandle());
+                    return new TargetEntity(1, true, true, (EntityLiving) ((CraftEntity) nearBukkitEntity).getHandle());
                 }
             }
         }
@@ -223,16 +229,20 @@ public class PathfinderGoalFindEntityAndShootIt<T extends EntityCreature & Custo
             unseenTicks += INTERVAL_OF_RE_SEARCH_TARGET;
             if (isInSight(currentNmsTarget.getBukkitEntity())) {
                 unseenTicks = 0;
-                return new TargetEntity(2, true, true, currentNmsTarget);
+                return new TargetEntity(2, false, true, currentNmsTarget);
             } else if (unseenTicks <= maxUnseenMemoryTicks) {
-                return new TargetEntity(2, true, false, currentNmsTarget);
+                return new TargetEntity(2, false, false, currentNmsTarget);
             }
         }
-        // 3. 5칸 안의 가장 가까운 엔티티
+        // 3. 6칸 안의 가장 가까운 엔티티
         for (Entity nearBukkitEntity : nearBukkitEntityList) {
             if (nearBukkitEntity instanceof LivingEntity) {
-                if (bukkitEntity.getLocation().distance(nearBukkitEntity.getLocation()) <= 5 && ((LivingEntity)bukkitEntity).hasLineOfSight(nearBukkitEntity)) {
-                    return new TargetEntity(3, false, nearBukkitEntity instanceof Player, (EntityLiving) ((CraftEntity) nearBukkitEntity).getHandle());
+                if (bukkitEntity.getLocation().distance(nearBukkitEntity.getLocation()) <= 6) {
+                    if (!((LivingEntity)bukkitEntity).hasLineOfSight(nearBukkitEntity)) { // 블럭에 가려져있다면, 6칸 안에 있는 적에게 쫒아가게끔
+                        unseenTicks = CHASE_TICK;
+                        return new TargetEntity(3, false, nearBukkitEntity instanceof Player, (EntityLiving) ((CraftEntity) nearBukkitEntity).getHandle());
+                    }
+                    return new TargetEntity(3, true, nearBukkitEntity instanceof Player, (EntityLiving) ((CraftEntity) nearBukkitEntity).getHandle());
                 }
             }
         }
@@ -240,7 +250,7 @@ public class PathfinderGoalFindEntityAndShootIt<T extends EntityCreature & Custo
         for (Entity nearBukkitEntity : nearBukkitEntityList) {
             if (nearBukkitEntity instanceof Monster) {
                 if (bukkitEntity.getLocation().distance(nearBukkitEntity.getLocation()) <= 15 && isInSight(nearBukkitEntity)) {
-                    return new TargetEntity(4, false, false, (EntityLiving) ((CraftEntity) nearBukkitEntity).getHandle());
+                    return new TargetEntity(4, true, false, (EntityLiving) ((CraftEntity) nearBukkitEntity).getHandle());
                 }
             }
         }
@@ -286,7 +296,7 @@ public class PathfinderGoalFindEntityAndShootIt<T extends EntityCreature & Custo
                 if (nearEntityScav.getGoalTarget() == null) {
                     Bukkit.getScheduler().runTaskLater(Main.getInstance(), () -> {
                         if (nearEntityScav.getGoalTarget() == null && isInTargetableState(target)) {
-                            nearEntityScav.getPathfinderGoalFindEntityAndShootIt().setGoalTarget(new TargetEntity(-1, false, false, target));
+                            nearEntityScav.getPathfinderGoalFindEntityAndShootIt().setGoalTarget(new TargetEntity(-1, true, false, target));
                         }
                     }, nmsEntity.getRandom().nextInt(15) + 5);
                 }
