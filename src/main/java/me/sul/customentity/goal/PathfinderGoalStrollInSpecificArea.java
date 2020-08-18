@@ -2,26 +2,27 @@ package me.sul.customentity.goal;
 
 import me.sul.customentity.entity.CustomEntity;
 import me.sul.customentity.spawnarea.Area;
-import me.sul.customentity.util.DebugUtil;
 import net.minecraft.server.v1_12_R1.*;
+import org.bukkit.entity.Entity;
 
 // PathfinderGoalMoveThroughVillage 기반. private 메소드 오버라이딩 못하는 문제로 상속하지 않았음.
 // TODO: 길이 막히는 등으로 갈 수 없는 경우면 다른 곳으로 위치 재설정
 public class PathfinderGoalStrollInSpecificArea<T extends EntityCreature & CustomEntity> extends PathfinderGoal {
-    private final T entity;
+    private final T nmsEntity;
+    private final Entity bukkitEntity;
     private final Area area;
     private final double speed;
     private PathEntity goalPath;
     private final int randomInterval;
-    private boolean isAwayFromArea = false;
 
-    public PathfinderGoalStrollInSpecificArea(T entity, Area area, double speed, int randomInterval) {
-        this.entity = entity;
+    public PathfinderGoalStrollInSpecificArea(T nmsEntity, Area area, double speed, int randomInterval) {
+        this.nmsEntity = nmsEntity;
+        this.bukkitEntity = nmsEntity.getBukkitEntity();
         this.area = area;
         this.speed = speed;
         this.randomInterval = randomInterval;
         this.a(1); // setFlag() ? 모든게 다 a(1)임
-        if (!(entity.getNavigation() instanceof Navigation)) {
+        if (!(nmsEntity.getNavigation() instanceof Navigation)) {
             throw new IllegalArgumentException("Unsupported mob for MoveThroughVillageGoal");
         }
     }
@@ -29,51 +30,44 @@ public class PathfinderGoalStrollInSpecificArea<T extends EntityCreature & Custo
 
     @Override
     public boolean a() {  // canUse()
-        if (entity.getGoalTarget() != null) return false;
-        org.bukkit.Location entityLoc = entity.getBukkitEntity().getLocation();
-        org.bukkit.Location targetLoc = entityLoc;
-        isAwayFromArea = false;
-
-        // 지정 구역에서 벗어났을 때
-        if (area.isAwayFromArea(entityLoc)) {
-            isAwayFromArea = true;
-            targetLoc = area.getClosestLocation(entityLoc);
-            if (targetLoc.distance(entityLoc) > entity.getAttributeInstance(GenericAttributes.FOLLOW_RANGE).getValue()) {
-                entity.killEntity();
-            }
-        }
-        if (!isAwayFromArea && entity.getRandom().nextInt(randomInterval) == 0) {
-            for (int i = 0; i <= 100; i++) { // 거의 무한
-                targetLoc = area.getRandomLocation();
-                if (entityLoc.distance(targetLoc) <= 10 && !area.isAwayFromArea(targetLoc)) { // TODO: 이부분 보완. 랜덤으로 주변 위치 얻는 메소드로 변경해야 할 듯. Vec3D vec3d = RandomPositionGenerator.a(this.entity, 5, 4);  // 자신 근처 아무데나 위치?
-                    break;
-                }
-                if (i == 100) DebugUtil.printStackTrace();
-            }
-        }
-        Navigation navigation = (Navigation) entity.getNavigation();
-        navigation.a(true); // canOpenDoors. b(): canPassDoors, c(): canFloat.  PathfinderGoalOpenDoor과 함께 있어야 작동하는 듯?
-        goalPath = navigation.a(targetLoc.getX(), targetLoc.getY(), targetLoc.getZ());
-        return true;
+        if (!nmsEntity.getNavigation().o() || nmsEntity.getGoalTarget() != null) return false;
+        return nmsEntity.getRandom().nextInt(randomInterval) == 0;
     }
 
-    // TODO: 전투상황에서는 true를 반환하지 못하게 해야 함
     @Override
     public boolean b() {  // canContinueToUse()
-        return !entity.getNavigation().o() && entity.getGoalTarget() == null;
+        return !nmsEntity.getNavigation().o() && nmsEntity.getGoalTarget() == null;
     }
 
     @Override
     public void c() {  // start()
-        if (!isAwayFromArea) {
-            entity.getNavigation().a(goalPath, speed);
+        org.bukkit.Location destinationLoc;
+        boolean isAwayFromArea;
+        // 지정 구역에서 벗어났을 때
+        if (area.isAwayFromArea(bukkitEntity.getLocation())) {
+            destinationLoc = area.getClosestLocation(bukkitEntity.getLocation());
+            if (destinationLoc.distance(bukkitEntity.getLocation()) >= nmsEntity.getAttributeInstance(GenericAttributes.FOLLOW_RANGE).getValue() * 0.9) {
+                nmsEntity.killEntity();
+                return;
+            }
+            isAwayFromArea = true;
         } else {
-            entity.getNavigation().a(goalPath, speed*1.2);
+            destinationLoc = area.getLocationForStroll(bukkitEntity.getLocation(), 5,10);
+            isAwayFromArea = false;
+        }
+        Navigation navigation = (Navigation) nmsEntity.getNavigation();
+        navigation.a(true); // canOpenDoors. b(): canPassDoors, c(): canFloat.  PathfinderGoalOpenDoor과 함께 있어야 작동하는 듯?
+        goalPath = navigation.a(destinationLoc.getX(), destinationLoc.getY(), destinationLoc.getZ());
+
+        if (!isAwayFromArea) {
+            nmsEntity.getNavigation().a(goalPath, speed);
+        } else {
+            nmsEntity.getNavigation().a(goalPath, speed*1.2);
         }
     }
 
     @Override
     public void d() {  // stop()
-        entity.getNavigation().p(); // stop
+        nmsEntity.getNavigation().p(); // stop
     }
 }
