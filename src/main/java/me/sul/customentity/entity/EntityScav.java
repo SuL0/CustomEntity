@@ -2,8 +2,13 @@ package me.sul.customentity.entity;
 
 import me.libraryaddict.disguise.disguisetypes.PlayerDisguise;
 import me.sul.customentity.goal.PathfinderGoalFindEntityAndShootIt;
+import me.sul.customentity.goal.PathfinderGoalRandomLookaround;
+import me.sul.customentity.goal.PathfinderGoalStrollInSpecificArea;
 import me.sul.customentity.spawnarea.Area;
-import net.minecraft.server.v1_12_R1.*;
+import net.minecraft.server.v1_12_R1.EntitySkeleton;
+import net.minecraft.server.v1_12_R1.GenericAttributes;
+import net.minecraft.server.v1_12_R1.PathfinderGoalFloat;
+import net.minecraft.server.v1_12_R1.PathfinderGoalOpenDoor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.craftbukkit.v1_12_R1.CraftWorld;
@@ -15,7 +20,7 @@ public class EntityScav extends EntitySkeleton implements CustomEntity {
     private static final int FOLLOW_RANGE  = 50;
 
     private final Area area;
-    private boolean isSeeingTarget = false;
+    private PathfinderGoalFindEntityAndShootIt<EntityScav> pathfinderGoalFindEntityAndShootIt;
 
     public EntityScav(Area area) {
         this(area, area.getRandomLocation());
@@ -47,14 +52,17 @@ public class EntityScav extends EntitySkeleton implements CustomEntity {
     // targetSelector은 타게팅만 하는 곳.
     // 그런데 정말 재활용 하기 좋을 정도로 세분화해서 만들어야하며, 복잡한 매커니즘을 적용할 수 없음. -> 그냥 goalSelector 한개에 다 넣는게 좋은 방법임.
     private void registerGoalSelector() {
+        pathfinderGoalFindEntityAndShootIt = new PathfinderGoalFindEntityAndShootIt<>(this, 3, 4F, 5.0F, 5);
         goalSelector.a(1, new PathfinderGoalFloat(this));
         goalSelector.a(2, new PathfinderGoalOpenDoor(this, false));
-        goalSelector.a(4, new PathfinderGoalFindEntityAndShootIt<>(this, 3, 4F, 5.0F, 5));
-//        goalSelector.a(4, new PathfinderGoalMoveInBattle<EntityScav>(this, 1.0D, 15.0F));
-//        goalSelector.a(5, new PathfinderGoalStrollInSpecificArea<EntityScav>(this, area, 1.0F, 45));
-        goalSelector.a(6, new PathfinderGoalRandomLookaround(this));
+        goalSelector.a(4, pathfinderGoalFindEntityAndShootIt);
+        goalSelector.a(5, new PathfinderGoalStrollInSpecificArea<EntityScav>(this, area, 1.0F, 55));
+        goalSelector.a(6, new PathfinderGoalRandomLookaround(this, 0.5F));
     }
 
+    public PathfinderGoalFindEntityAndShootIt<EntityScav> getPathfinderGoalFindEntityAndShootIt() {
+        return pathfinderGoalFindEntityAndShootIt;
+    }
 
 
     @Override

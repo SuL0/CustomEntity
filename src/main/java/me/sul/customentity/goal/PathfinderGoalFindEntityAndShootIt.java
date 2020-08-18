@@ -1,8 +1,9 @@
 package me.sul.customentity.goal;
 
+import me.sul.customentity.Main;
 import me.sul.customentity.entity.CustomEntity;
+import me.sul.customentity.entity.EntityScav;
 import me.sul.customentity.entityweapon.EntityCrackShotWeapon;
-import me.sul.customentity.util.DebugUtil;
 import me.sul.customentity.util.DistanceComparator;
 import net.minecraft.server.v1_12_R1.*;
 import org.bukkit.Bukkit;
@@ -18,7 +19,9 @@ import org.bukkit.util.Vector;
 
 import javax.annotation.Nullable;
 import java.lang.reflect.Field;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 // PathfinderGoalNearestAttackableTarget 기반
 public class PathfinderGoalFindEntityAndShootIt<T extends EntityCreature & CustomEntity> extends PathfinderGoal {
@@ -45,7 +48,7 @@ public class PathfinderGoalFindEntityAndShootIt<T extends EntityCreature & Custo
     private static final int INTERVAL_OF_RE_SEARCH_TARGET = 10;
 
     public PathfinderGoalFindEntityAndShootIt(T nmsCreature, int fireDelay, float projDamage, float projSpread, int projSpeed) {
-        this(nmsCreature, fireDelay, projDamage, projSpread, projSpeed, 100, 5);
+        this(nmsCreature, fireDelay, projDamage, projSpread, projSpeed, 100, 3);
     }
     public PathfinderGoalFindEntityAndShootIt(T nmsCreature, int fireDelay, float projDamage, float projSpread, int projSpeed, int maxUnseenMemoryTicks, int randomInterval) {
         this.nmsEntity = nmsCreature;
@@ -71,7 +74,9 @@ public class PathfinderGoalFindEntityAndShootIt<T extends EntityCreature & Custo
     @Override
     public void e() { tick(); }
 
+    // 4틱마다 반복
     public boolean canUse() {
+        if (nmsEntity.getGoalTarget() != null) return true;  // alertOthers()에 의해서 GoalTarget이 정해질 수도 있음
         if (nmsEntity.getRandom().nextInt(randomInterval) != 0) return false;
 
         TargetEntity targetEntity = getAppropriateTarget();
@@ -79,6 +84,7 @@ public class PathfinderGoalFindEntityAndShootIt<T extends EntityCreature & Custo
         return (targetEntity != null);
     }
 
+    // 1틱마다 반복
     public boolean canContinueToUse() {
         if (cntForCanContinueToUse == Integer.MAX_VALUE) cntForCanContinueToUse = 0;
         if (++cntForCanContinueToUse % INTERVAL_OF_RE_SEARCH_TARGET == 0 || !isInTargetableState(nmsEntity.getGoalTarget())) { // + 원래 유지하던 타겟이 공격할 수 없는 상태가 되면, 바로 다른 타겟을 찾아봄.
@@ -161,6 +167,8 @@ public class PathfinderGoalFindEntityAndShootIt<T extends EntityCreature & Custo
             }
         } else if (!targetEntity.getNmsEntity().equals(nmsEntity.getGoalTarget())) {
             nmsEntity.setGoalTarget(targetEntity.getNmsEntity(), EntityTargetEvent.TargetReason.CUSTOM, true);
+            if (targetEntity.haveToAlertOther())
+                alertOthers();
         }
     }
 
@@ -188,13 +196,8 @@ public class PathfinderGoalFindEntityAndShootIt<T extends EntityCreature & Custo
         nearBukkitEntityList.sort(bukkitDistanceComparator);
 
         // 타게팅 대상이 될 수 없는 값들은 리스트에서 모두 제거
-        for (Entity nearBukkitEntity: nearBukkitEntityList) {
-            if (!(nearBukkitEntity instanceof LivingEntity)) nearBukkitEntityList.remove(nearBukkitEntity);
-            EntityLiving nearNmsEntity = (EntityLiving) ((CraftEntity)nearBukkitEntity).getHandle();
-            if (nmsEntity.getClass().equals(nearNmsEntity.getClass()) || !isInTargetableState(nearNmsEntity)) {
-                nearBukkitEntityList.remove(nearBukkitEntity);
-            }
-        }
+        nearBukkitEntityList.removeIf(nearBukkitEntity -> !(nearBukkitEntity instanceof LivingEntity));
+        nearBukkitEntityList.removeIf(nearBukkitEntity -> nmsEntity.getClass().equals(((CraftEntity) nearBukkitEntity).getHandle().getClass()) || !isInTargetableState((EntityLiving) ((CraftEntity) nearBukkitEntity).getHandle()));
 
 
         // 0. 나를 공격한 엔티티
@@ -202,7 +205,7 @@ public class PathfinderGoalFindEntityAndShootIt<T extends EntityCreature & Custo
             checkedHurtTimestamp = nmsEntity.hurtTimestamp;
             if (nmsEntity.getLastDamager() != null) {
                 if (isInTargetableState(nmsEntity.getLastDamager())) {
-                    return new TargetEntity(0, false, nmsEntity.getLastDamager());
+                    return new TargetEntity(0, false, true, nmsEntity.getLastDamager());
                 }
             }
         }
@@ -210,7 +213,7 @@ public class PathfinderGoalFindEntityAndShootIt<T extends EntityCreature & Custo
         for (Entity nearBukkitEntity : nearBukkitEntityList) {
             if (nearBukkitEntity instanceof Player) {
                 if (isInSight(nearBukkitEntity)) {
-                    return new TargetEntity(1, false, (EntityLiving) ((CraftEntity) nearBukkitEntity).getHandle());
+                    return new TargetEntity(1, false, true, (EntityLiving) ((CraftEntity) nearBukkitEntity).getHandle());
                 }
             }
         }
@@ -220,24 +223,24 @@ public class PathfinderGoalFindEntityAndShootIt<T extends EntityCreature & Custo
             unseenTicks += INTERVAL_OF_RE_SEARCH_TARGET;
             if (isInSight(currentNmsTarget.getBukkitEntity())) {
                 unseenTicks = 0;
-                return new TargetEntity(2, true, currentNmsTarget);
+                return new TargetEntity(2, true, true, currentNmsTarget);
             } else if (unseenTicks <= maxUnseenMemoryTicks) {
-                return new TargetEntity(2, true, currentNmsTarget);
+                return new TargetEntity(2, true, false, currentNmsTarget);
             }
         }
         // 3. 5칸 안의 가장 가까운 엔티티
         for (Entity nearBukkitEntity : nearBukkitEntityList) {
             if (nearBukkitEntity instanceof LivingEntity) {
                 if (bukkitEntity.getLocation().distance(nearBukkitEntity.getLocation()) <= 5 && ((LivingEntity)bukkitEntity).hasLineOfSight(nearBukkitEntity)) {
-                    return new TargetEntity(3, false, (EntityLiving) ((CraftEntity) nearBukkitEntity).getHandle());
+                    return new TargetEntity(3, false, nearBukkitEntity instanceof Player, (EntityLiving) ((CraftEntity) nearBukkitEntity).getHandle());
                 }
             }
         }
-        // 4. 보이는 가장 가까운 몹
+        // 4. 보이는 15칸 안의 몹
         for (Entity nearBukkitEntity : nearBukkitEntityList) {
             if (nearBukkitEntity instanceof Monster) {
-                if (isInSight(nearBukkitEntity)) {
-                    return new TargetEntity(4, false, (EntityLiving) ((CraftEntity) nearBukkitEntity).getHandle());
+                if (bukkitEntity.getLocation().distance(nearBukkitEntity.getLocation()) <= 15 && isInSight(nearBukkitEntity)) {
+                    return new TargetEntity(4, false, false, (EntityLiving) ((CraftEntity) nearBukkitEntity).getHandle());
                 }
             }
         }
@@ -266,4 +269,29 @@ public class PathfinderGoalFindEntityAndShootIt<T extends EntityCreature & Custo
         return Math.toDegrees(Math.acos(cosAngle)); // acos만 하면 라디안이 나와서 각도로 변환해야 함
     }
 
+
+    private void alertOthers() {
+        if (nmsEntity.getGoalTarget() == null) return;
+        EntityLiving target = nmsEntity.getGoalTarget();
+        Set<Entity> nearBukkitEntityList = new HashSet<>();
+
+        nearBukkitEntityList.addAll(nmsEntity.getBukkitEntity().getNearbyEntities(10, 10, 10));  // nmsEntity 주변
+        nearBukkitEntityList.addAll(nmsEntity.getGoalTarget().getBukkitEntity().getNearbyEntities(20, 20, 20));  // 플레이어 주변
+
+        for (Entity nearBukkitEntity : nearBukkitEntityList) {
+            net.minecraft.server.v1_12_R1.Entity nearNmsEntity = ((CraftEntity)nearBukkitEntity).getHandle();
+            if (nearNmsEntity.getClass().equals(nmsEntity.getClass())) {
+
+                EntityScav nearEntityScav = (EntityScav)nearNmsEntity;
+                if (nearEntityScav.getGoalTarget() == null) {
+                    Bukkit.getScheduler().runTaskLater(Main.getInstance(), () -> {
+                        if (nearEntityScav.getGoalTarget() == null && isInTargetableState(target)) {
+                            nearEntityScav.getPathfinderGoalFindEntityAndShootIt().setGoalTarget(new TargetEntity(-1, false, false, target));
+                        }
+                    }, nmsEntity.getRandom().nextInt(15) + 5);
+                }
+            }
+
+        }
+    }
 }
