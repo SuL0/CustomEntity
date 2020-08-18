@@ -3,11 +3,14 @@ package me.sul.customentity.spawnarea;
 import org.bukkit.Location;
 import org.bukkit.World;
 
+import java.util.Random;
+
 
 // TODO: y좌표는 없앨까?
 public class Area {
     private final Location minLocation;
     private final Location maxLocation;
+    private static final Random random = new Random();
 
     public Area(Location loc1, Location loc2) {
         this(loc1.getWorld(), loc1.getX(), loc1.getY(), loc1.getZ(), loc2.getX(), loc2.getY(), loc2.getZ());
@@ -48,11 +51,23 @@ public class Area {
         return (minLocation.add(maxLocation)).multiply(0.5);
     }
     public Location getRandomLocation() {
-        double randX = getMinX() + (getMaxX()-getMinX())*Math.random();
-        double randY = getMinY() + (getMaxY()-getMinY())*Math.random();
-        double randZ = getMinZ() + (getMaxZ()-getMinZ())*Math.random();
+        double randX = getMinX() + (getMaxX()-getMinX())*random.nextFloat();
+        double randY = getMinY() + (getMaxY()-getMinY())*random.nextFloat();
+        double randZ = getMinZ() + (getMaxZ()-getMinZ())*random.nextFloat();
         return new Location(getWorld(), randX, randY, randZ);
     }
+    public Location getLocationForStroll(Location currentLoc, int minLength, int maxLength) {
+        for (int i=0; i<10; i++) {
+            double randX = ((random.nextBoolean()) ? 1:-1) * (random.nextFloat() * maxLength + minLength);
+            double randZ = ((random.nextBoolean()) ? 1:-1) * (random.nextFloat() * maxLength + minLength);
+            Location randLoc = currentLoc.clone().add(randX, 0, randZ);
+            if (!isAwayFromArea(randLoc)) {
+                return randLoc;
+            }
+        }
+        return currentLoc;
+    }
+
 
     // NOTE: 여기에 y축은 배제시켰음.
     public boolean isAwayFromArea(Location givenLoc) {
