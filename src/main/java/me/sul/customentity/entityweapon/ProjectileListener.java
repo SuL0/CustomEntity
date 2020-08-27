@@ -1,8 +1,7 @@
 package me.sul.customentity.entityweapon;
 
 import com.shampaggon.crackshot.CSDirector;
-import me.sul.customentity.entity.EntityScav;
-import org.bukkit.Bukkit;
+import org.bukkit.craftbukkit.v1_12_R1.entity.CraftEntity;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -19,7 +18,7 @@ public class ProjectileListener implements Listener {
         Entity victim = e.getEntity();
         if (damager instanceof Projectile && damager.hasMetadata(EntityCrackShotWeapon.PROJ_DAMAGE_META) && victim instanceof Damageable) {
             Entity attacker = (((Projectile) damager).getShooter() instanceof Entity) ? ((Entity)((Projectile) damager).getShooter()) : null;
-            if (attacker != null && attacker.getType() == EntityType.SKELETON && victim.getType() == EntityType.SKELETON) {
+            if (attacker != null && ((CraftEntity)damager).getHandle().getClass().equals(((CraftEntity)victim).getHandle().getClass())) {
                 e.setCancelled(true);
                 return;
             }

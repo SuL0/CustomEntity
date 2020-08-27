@@ -37,8 +37,9 @@ public class EntityScav extends EntitySkeleton implements CustomEntity {
         setCustomName(ENTITY_NAME);
         setCustomNameVisible(true);
         getAttributeInstance(GenericAttributes.FOLLOW_RANGE).setValue(FOLLOW_RANGE);
-        ((org.bukkit.entity.LivingEntity)getBukkitEntity()).getEquipment().setItemInMainHand(new org.bukkit.inventory.ItemStack(Material.DIAMOND_PICKAXE, 1, (short)2));
-//        ((org.bukkit.entity.LivingEntity)getBukkitEntity()).getEquipment().setItemInMainHand(new org.bukkit.inventory.ItemStack(Material.BOW, 1));
+//        ((org.bukkit.entity.LivingEntity)getBukkitEntity()).getEquipment().setItemInMainHand(new org.bukkit.inventory.ItemStack(Material.DIAMOND_PICKAXE, 1, (short)2));
+        ((org.bukkit.entity.LivingEntity)getBukkitEntity()).getEquipment().setItemInMainHand(new org.bukkit.inventory.ItemStack(Material.BOW, 1));
+        ((org.bukkit.entity.LivingEntity)getBukkitEntity()).getEquipment().setItemInOffHand(new org.bukkit.inventory.ItemStack(Material.SHIELD, 1));
         // TODO: 재생효과 추가
         PlayerDisguise playerDisguise = new PlayerDisguise(ENTITY_NAME, "DeathSimo46");
         playerDisguise.setEntity(this.getBukkitEntity());

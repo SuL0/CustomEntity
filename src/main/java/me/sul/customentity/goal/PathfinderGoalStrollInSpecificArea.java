@@ -7,7 +7,6 @@ import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 
 // PathfinderGoalMoveThroughVillage 기반. private 메소드 오버라이딩 못하는 문제로 상속하지 않았음.
-// TODO: 길이 막히는 등으로 갈 수 없는 경우면 다른 곳으로 위치 재설정
 public class PathfinderGoalStrollInSpecificArea<T extends EntityCreature & CustomEntity> extends PathfinderGoal {
     private final T nmsEntity;
     private final Entity bukkitEntity;

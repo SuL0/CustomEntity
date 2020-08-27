@@ -110,7 +110,7 @@ public class PathfinderGoalFindEntityAndShootIt<T extends EntityCreature & Custo
         }
     }
 
-    public void tick() {  // goalTarget이 무조건 있음.
+    public void tick() {  // goalTarget != null.
         tick_handleWeapon();
         tick_moving();
     }
@@ -202,7 +202,7 @@ public class PathfinderGoalFindEntityAndShootIt<T extends EntityCreature & Custo
         nearBukkitEntityList.sort(bukkitDistanceComparator);
 
         // 타게팅 대상이 될 수 없는 값들은 리스트에서 모두 제거
-        nearBukkitEntityList.removeIf(nearBukkitEntity -> !(nearBukkitEntity instanceof LivingEntity));
+        nearBukkitEntityList.removeIf(nearBukkitEntity -> !(nearBukkitEntity instanceof Monster || nearBukkitEntity instanceof Player));
         nearBukkitEntityList.removeIf(nearBukkitEntity -> nmsEntity.getClass().equals(((CraftEntity) nearBukkitEntity).getHandle().getClass()) || !isInTargetableState((EntityLiving) ((CraftEntity) nearBukkitEntity).getHandle()));
 
 
@@ -236,7 +236,7 @@ public class PathfinderGoalFindEntityAndShootIt<T extends EntityCreature & Custo
         }
         // 3. 6칸 안의 가장 가까운 엔티티
         for (Entity nearBukkitEntity : nearBukkitEntityList) {
-            if (nearBukkitEntity instanceof LivingEntity) {
+            if (nearBukkitEntity instanceof Monster || nearBukkitEntity instanceof Player) {
                 if (bukkitEntity.getLocation().distance(nearBukkitEntity.getLocation()) <= 6) {
                     if (!((LivingEntity)bukkitEntity).hasLineOfSight(nearBukkitEntity)) { // 블럭에 가려져있다면, 6칸 안에 있는 적에게 쫒아가게끔
                         unseenTicks = CHASE_TICK;
