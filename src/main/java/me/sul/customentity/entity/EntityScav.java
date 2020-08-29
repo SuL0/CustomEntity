@@ -37,8 +37,8 @@ public class EntityScav extends EntitySkeleton implements CustomEntity {
         setCustomName(ENTITY_NAME);
         setCustomNameVisible(true);
         getAttributeInstance(GenericAttributes.FOLLOW_RANGE).setValue(FOLLOW_RANGE);
-//        ((org.bukkit.entity.LivingEntity)getBukkitEntity()).getEquipment().setItemInMainHand(new org.bukkit.inventory.ItemStack(Material.DIAMOND_PICKAXE, 1, (short)2));
-        ((org.bukkit.entity.LivingEntity)getBukkitEntity()).getEquipment().setItemInMainHand(new org.bukkit.inventory.ItemStack(Material.BOW, 1));
+        ((org.bukkit.entity.LivingEntity)getBukkitEntity()).getEquipment().setItemInMainHand(new org.bukkit.inventory.ItemStack(Material.DIAMOND_PICKAXE, 1, (short)2));
+//        ((org.bukkit.entity.LivingEntity)getBukkitEntity()).getEquipment().setItemInMainHand(new org.bukkit.inventory.ItemStack(Material.BOW, 1));
         ((org.bukkit.entity.LivingEntity)getBukkitEntity()).getEquipment().setItemInOffHand(new org.bukkit.inventory.ItemStack(Material.SHIELD, 1));
         // TODO: 재생효과 추가
         PlayerDisguise playerDisguise = new PlayerDisguise(ENTITY_NAME, "DeathSimo46");
@@ -53,7 +53,7 @@ public class EntityScav extends EntitySkeleton implements CustomEntity {
     // targetSelector은 타게팅만 하는 곳.
     // 그런데 정말 재활용 하기 좋을 정도로 세분화해서 만들어야하며, 복잡한 매커니즘을 적용할 수 없음. -> 그냥 goalSelector 한개에 다 넣는게 좋은 방법임.
     private void registerGoalSelector() {
-        pathfinderGoalFindEntityAndShootIt = new PathfinderGoalFindEntityAndShootIt<>(this, 3, 4F, 5.0F, 5);
+        pathfinderGoalFindEntityAndShootIt = new PathfinderGoalFindEntityAndShootIt<>(this, 3, 4F, 5.0F, 7);
         goalSelector.a(1, new PathfinderGoalFloat(this));
         goalSelector.a(2, new PathfinderGoalOpenDoor(this, false));
         goalSelector.a(4, pathfinderGoalFindEntityAndShootIt);

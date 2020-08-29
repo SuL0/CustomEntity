@@ -4,6 +4,7 @@ import me.sul.customentity.Main;
 import me.sul.customentity.entity.CustomEntity;
 import me.sul.customentity.entity.EntityScav;
 import me.sul.customentity.entityweapon.EntityCrackShotWeapon;
+import me.sul.customentity.goal.util.EntityAnimation;
 import me.sul.customentity.util.DistanceComparator;
 import net.minecraft.server.v1_12_R1.*;
 import org.bukkit.Bukkit;
@@ -67,8 +68,8 @@ public class PathfinderGoalFindEntityAndShootIt<T extends EntityCreature & Custo
     public boolean a() { return canUse(); }
     @Override
     public boolean b() { return canContinueToUse(); }
-    @Override
-    public void c() { start(); }
+//    @Override
+//    public void c() { start(); }
     @Override
     public void d() { stop(); }
     @Override
@@ -95,19 +96,11 @@ public class PathfinderGoalFindEntityAndShootIt<T extends EntityCreature & Custo
         return true;
     }
 
-    public void start() {
-        if (isHoldingBow()) {
-            nmsEntity.c(EnumHand.MAIN_HAND); // startUsingItem()
-        }
-    }
-
     public void stop() {
         setGoalTarget(null);
         nmsEntity.getNavigation().p();
         fireDelayCnt = 0;
-        if (isHoldingBow()) {
-            this.nmsEntity.cN(); // stopUsingItem()
-        }
+        EntityAnimation.stopUsingItem(nmsEntity);
     }
 
     public void tick() {  // goalTarget != null.
@@ -123,6 +116,8 @@ public class PathfinderGoalFindEntityAndShootIt<T extends EntityCreature & Custo
         }
         fireDelayCnt++;
     }
+
+    // TODO: unseenTicks를 기준으로 무빙 타입을 나누기보다 on off같이 확실하게 바꾸는게 낫지 않으려나
     private void tick_moving() {
         EntityLiving goalTarget = nmsEntity.getGoalTarget();
         nmsEntity.getControllerLook().a(goalTarget, 30.0F, 30.0F);  // setLookAt
@@ -130,6 +125,8 @@ public class PathfinderGoalFindEntityAndShootIt<T extends EntityCreature & Custo
         // 몹 탐색 주기(unseenTicks 바뀌는 주기)랑 똑같은 주기를 주었음.
         if (cntForCanContinueToUse % INTERVAL_OF_RE_SEARCH_TARGET == 0) {
             if (unseenTicks == 0) {
+                EntityAnimation.stopUsingItem(nmsEntity);
+
                 nmsEntity.getNavigation().p();
                 if (nmsEntity.getRandom().nextFloat() < 0.3D) {
                     strafingClockwise = !strafingClockwise;
@@ -147,7 +144,9 @@ public class PathfinderGoalFindEntityAndShootIt<T extends EntityCreature & Custo
                 // 그렇기에 위의 메소드를 호출하고, Navigation의 moveTo()를 호출하면 위의 메소드가 씹히게됨. 그러므로 아래의 메소드를 직접 사용해줘야함.
                 nmsEntity.p(0.0F);  // strafeForwards
                 nmsEntity.n(0.0F);  // strafeRight
-                moveToLocConsideringDoor(goalTarget.getBukkitEntity().getLocation(), 1.3D);  // TODO: 방벽 들고 돌격
+
+                EntityAnimation.startUsingItem(nmsEntity, EnumHand.OFF_HAND); // 방벽 들기
+                moveToLocConsideringDoor(goalTarget.getBukkitEntity().getLocation(), 1.3D);
 
             } else if (unseenTicks > CHASE_TICK && nmsEntity.getNavigation().o()) {
                 unseenTicks = maxUnseenMemoryTicks;
