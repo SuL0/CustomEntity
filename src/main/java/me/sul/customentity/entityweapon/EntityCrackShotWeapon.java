@@ -5,7 +5,7 @@ import me.sul.customentity.Main;
 import me.sul.customentity.event.CustomEntityShootEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.craftbukkit.v1_12_R1.entity.CraftEntity;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Projectile;
 import org.bukkit.metadata.FixedMetadataValue;
@@ -18,7 +18,7 @@ public class EntityCrackShotWeapon {
     public final static String PROJ_DAMAGE_META = "EntityCrackShotWeapon.Damage";
 
     // TODO: CrackShotProjectileBreakEvent 호출하게끔 CSA 변경
-    public static void fireProjectile(CraftEntity entity, CraftEntity target, float projSpread, int projSpeed, double damage) {
+    public static void fireProjectile(Entity entity, Entity target, float projSpread, int projSpeed, double damage) {
         Random r = new Random();
         Location fireLoc = entity.getLocation().add(0, 1.5, 0).add(entity.getLocation().getDirection());
         Vector projVector = target.getLocation().add(0, target.getHeight()/2, 0).toVector().subtract(fireLoc.toVector()).normalize().multiply(projSpeed);

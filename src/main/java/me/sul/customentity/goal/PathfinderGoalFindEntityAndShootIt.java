@@ -61,7 +61,7 @@ public class PathfinderGoalFindEntityAndShootIt<T extends EntityCreature & Custo
         this.randomInterval = randomInterval;
         this.maxUnseenMemoryTicks = maxUnseenMemoryTicks;
 
-        this.bukkitDistanceComparator = new DistanceComparator.Bukkit(nmsEntity.getBukkitEntity());
+        this.bukkitDistanceComparator = new DistanceComparator.Bukkit(bukkitEntity);
         this.a(1);
     }
     @Override
@@ -111,7 +111,7 @@ public class PathfinderGoalFindEntityAndShootIt<T extends EntityCreature & Custo
         EntityLiving target = nmsEntity.getGoalTarget(); // canContinueToUse()에서 걸러주기때문에 null일 수가 없음
         if (unseenTicks == 0) { // 시야에 타겟이 있을 때
             if (fireDelayCnt % fireDelay == 0) {
-                EntityCrackShotWeapon.fireProjectile(nmsEntity.getBukkitEntity(), target.getBukkitEntity(), projSpread, projSpeed, projDamage);
+                EntityCrackShotWeapon.fireProjectile(bukkitEntity, target.getBukkitEntity(), projSpread, projSpeed, projDamage);
             }
         }
         fireDelayCnt++;
@@ -202,7 +202,7 @@ public class PathfinderGoalFindEntityAndShootIt<T extends EntityCreature & Custo
 
         // 타게팅 대상이 될 수 없는 값들은 리스트에서 모두 제거
         nearBukkitEntityList.removeIf(nearBukkitEntity -> !(nearBukkitEntity instanceof Monster || nearBukkitEntity instanceof Player));
-        nearBukkitEntityList.removeIf(nearBukkitEntity -> nmsEntity.getClass().equals(((CraftEntity) nearBukkitEntity).getHandle().getClass()) || !isInTargetableState((EntityLiving) ((CraftEntity) nearBukkitEntity).getHandle()));
+        nearBukkitEntityList.removeIf(nearBukkitEntity -> (((CraftEntity) nearBukkitEntity).getHandle().getClass().isInstance(nmsEntity)) || !isInTargetableState((EntityLiving) ((CraftEntity) nearBukkitEntity).getHandle()));
 
 
         // 0. 나를 공격한 엔티티
@@ -259,8 +259,8 @@ public class PathfinderGoalFindEntityAndShootIt<T extends EntityCreature & Custo
     }
 
     private boolean isInTargetableState(EntityLiving nmsOpponent) {
-        if (nmsOpponent == null || !nmsOpponent.isAlive() || nmsOpponent.getClass().equals(nmsEntity.getClass())) return false;
-        if (nmsOpponent instanceof EntityHuman && (((EntityHuman)nmsOpponent).abilities.isInvulnerable || ((Player)nmsOpponent.getBukkitEntity()).getGameMode() != GameMode.SURVIVAL)) return false;
+        if (nmsOpponent == null || !nmsOpponent.isAlive()) return false;
+        if (nmsOpponent instanceof EntityPlayer && (((EntityHuman)nmsOpponent).abilities.isInvulnerable || ((Player)nmsOpponent.getBukkitEntity()).getGameMode() != GameMode.SURVIVAL)) return false;
         if (nmsOpponent.getBukkitEntity().getLocation().distance(bukkitEntity.getLocation()) > getFollowDistance()) return false;
         return true;
     }
@@ -281,10 +281,10 @@ public class PathfinderGoalFindEntityAndShootIt<T extends EntityCreature & Custo
 
     private void alertOthers() {
         if (nmsEntity.getGoalTarget() == null) return;
-        EntityLiving target = nmsEntity.getGoalTarget();
+        EntityLiving targetToAlert = nmsEntity.getGoalTarget();
         Set<Entity> nearBukkitEntityList = new HashSet<>();
 
-        nearBukkitEntityList.addAll(nmsEntity.getBukkitEntity().getNearbyEntities(10, 10, 10));  // nmsEntity 주변
+        nearBukkitEntityList.addAll(bukkitEntity.getNearbyEntities(10, 10, 10));  // nmsEntity 주변
         nearBukkitEntityList.addAll(nmsEntity.getGoalTarget().getBukkitEntity().getNearbyEntities(20, 20, 20));  // 플레이어 주변
 
         for (Entity nearBukkitEntity : nearBukkitEntityList) {
@@ -294,8 +294,8 @@ public class PathfinderGoalFindEntityAndShootIt<T extends EntityCreature & Custo
                 EntityScav nearEntityScav = (EntityScav)nearNmsEntity;
                 if (nearEntityScav.getGoalTarget() == null) {
                     Bukkit.getScheduler().runTaskLater(Main.getInstance(), () -> {
-                        if (nearEntityScav.getGoalTarget() == null && isInTargetableState(target)) {
-                            nearEntityScav.getPathfinderGoalFindEntityAndShootIt().setGoalTarget(new TargetEntity(-1, true, false, target));
+                        if (nearEntityScav.getGoalTarget() == null && isInTargetableState(targetToAlert)) {
+                            nearEntityScav.getPathfinderGoalFindEntityAndShootIt().setGoalTarget(new TargetEntity(-1, true, false, targetToAlert));
                         }
                     }, nmsEntity.getRandom().nextInt(15) + 5);
                 }
