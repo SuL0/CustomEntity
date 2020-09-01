@@ -1,7 +1,9 @@
 package me.sul.customentity.entity;
 
 import me.sul.customentity.util.CustomEntityRegistry;
-import org.bukkit.craftbukkit.v1_12_R1.entity.CraftEntity;
+import org.bukkit.Bukkit;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.Monster;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityCombustEvent;
@@ -11,11 +13,18 @@ import org.bukkit.event.world.ChunkLoadEvent;
 public class EntityManager implements Listener {
     public EntityManager() {
         CustomEntityRegistry.registerCustomEntity(51, "Skeleton", EntityScav.class);
+        CustomEntityRegistry.registerCustomEntity(54, "Zombie", EntityZombie.class);
     }
 
     @EventHandler
     public void onChunkLoad(ChunkLoadEvent e) {
         // TODO: 몹이 있다면 제거 (disguise가 풀려있을 확률도 있고 해서)
+//        for (Entity entity : e.getChunk().getEntities()) {
+//           if (entity instanceof Monster) {
+//               Bukkit.getServer().broadcastMessage("로딩된 청크에 있던 몹 제거");
+//               entity.remove();
+//           }
+//        }
     }
 
     
