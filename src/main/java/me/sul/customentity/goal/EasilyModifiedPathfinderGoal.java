@@ -1,8 +1,24 @@
 package me.sul.customentity.goal;
 
+import me.sul.customentity.util.PathfinderUtil;
+import net.minecraft.server.v1_12_R1.EntityCreature;
+import net.minecraft.server.v1_12_R1.EntityLiving;
 import net.minecraft.server.v1_12_R1.PathfinderGoal;
+import org.bukkit.Location;
+import org.bukkit.entity.Entity;
+import org.bukkit.event.entity.EntityTargetEvent;
+
+import java.util.Random;
 
 public class EasilyModifiedPathfinderGoal extends PathfinderGoal {
+    public final EntityCreature nmsEntity;
+    public final Entity bukkitEntity;
+
+    public EasilyModifiedPathfinderGoal(EntityCreature nmsEntity) {
+        this.nmsEntity = nmsEntity;
+        this.bukkitEntity = nmsEntity.getBukkitEntity();
+    }
+
     @Override
     public boolean a() { return canUse(); }
     @Override
@@ -14,13 +30,28 @@ public class EasilyModifiedPathfinderGoal extends PathfinderGoal {
     @Override
     public void e() { tick(); }
 
-    protected boolean canUse() { return false; }
+    public boolean canUse() { return false; } // 4틱마다 반복
+    public boolean canContinueToUse() { return canUse(); } // 1틱마다 반복
+    public void start() { }
+    public void stop() { }
+    public void tick() { }
 
-    protected boolean canContinueToUse() { return canUse(); }
+    // 기본
+    public Random getRandom() { return nmsEntity.getRandom(); }
+    public EntityLiving getGoalTarget() { return nmsEntity.getGoalTarget(); }
+    public void setGoalTarget(EntityLiving nmsTarget, EntityTargetEvent.TargetReason targetReasonIfTargetIsNotNull) {
+        nmsEntity.setGoalTarget(nmsTarget, (nmsTarget != null) ? targetReasonIfTargetIsNotNull : EntityTargetEvent.TargetReason.FORGOT_TARGET, true);
+    }
+    public void removeGoalTarget() { nmsEntity.setGoalTarget(null, EntityTargetEvent.TargetReason.FORGOT_TARGET, true); }
+    public void stopNavigation() { PathfinderUtil.stopNavigation(nmsEntity); }
+    public boolean isNavigationDone() { return PathfinderUtil.isNavigationDone(nmsEntity); }
 
-    protected void start() { }
+    // 커스텀  // 이걸 상속한 타겟과 관련된 클래스를 생성해서 거기로 옮겨야하려나
+    public void moveToLoc(Location location, double speed, boolean canOpenDoors) { PathfinderUtil.moveToLoc(nmsEntity, location, speed, canOpenDoors); }
 
-    protected void stop() { }
+    public boolean isInTargetableState(EntityLiving nmsOpponent) { return PathfinderUtil.isInTargetableState(bukkitEntity, nmsOpponent, PathfinderUtil.getFollowDistance(nmsEntity)); }
 
-    protected void tick() { }
+    public boolean isInSight(Entity bukkitOpponent) { return PathfinderUtil.isInSight(bukkitEntity, bukkitOpponent, 140); }
+
+    public double getFollowDistance() { return PathfinderUtil.getFollowDistance(nmsEntity); }
 }

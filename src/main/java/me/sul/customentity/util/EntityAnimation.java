@@ -1,4 +1,4 @@
-package me.sul.customentity.goal.util;
+package me.sul.customentity.util;
 
 import net.minecraft.server.v1_12_R1.EntityLiving;
 import net.minecraft.server.v1_12_R1.EnumHand;
