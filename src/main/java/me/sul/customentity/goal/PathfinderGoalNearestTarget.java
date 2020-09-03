@@ -4,6 +4,7 @@ import me.sul.customentity.util.DistanceComparator;
 import net.minecraft.server.v1_12_R1.EntityCreature;
 import net.minecraft.server.v1_12_R1.EntityLiving;
 import net.minecraft.server.v1_12_R1.EntityPlayer;
+import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v1_12_R1.entity.CraftEntity;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
@@ -26,18 +27,20 @@ public class PathfinderGoalNearestTarget extends EasilyModifiedPathfinderGoal {
         this.targetFilter = targetFilter;
 
         bukkitDistanceComparator = new DistanceComparator.Bukkit(bukkitEntity);
+
+        // 몹이 생성됐을 때 한 번 타겟 검색
+        EntityLiving nmsTarget = findTarget();
+        setGoalTarget(nmsTarget, (nmsTarget instanceof EntityPlayer) ? EntityTargetEvent.TargetReason.CLOSEST_PLAYER : EntityTargetEvent.TargetReason.CLOSEST_ENTITY);
     }
 
 
     @Override
     public boolean canUse() { // 4틱마다 반복
+        if (getGoalTarget() != null) return true;
         if (getRandom().nextInt(randomInterval) != 0) return false;
         EntityLiving nmsTarget = findTarget();
-        if (nmsTarget != null) {
-            setGoalTarget(nmsTarget, (nmsTarget instanceof EntityPlayer) ? EntityTargetEvent.TargetReason.CLOSEST_PLAYER : EntityTargetEvent.TargetReason.CLOSEST_ENTITY);
-            return true;
-        }
-        return false;
+        setGoalTarget(nmsTarget, (nmsTarget instanceof EntityPlayer) ? EntityTargetEvent.TargetReason.CLOSEST_PLAYER : EntityTargetEvent.TargetReason.CLOSEST_ENTITY);
+        return (getGoalTarget() != null);
     }
 
     @Override
@@ -45,7 +48,7 @@ public class PathfinderGoalNearestTarget extends EasilyModifiedPathfinderGoal {
         if (getRandom().nextInt(randomInterval*4) == 0 || !isInTargetableState(getGoalTarget())) {
             EntityLiving nmsTarget = findTarget();
             setGoalTarget(nmsTarget, (nmsTarget instanceof EntityPlayer) ? EntityTargetEvent.TargetReason.CLOSEST_PLAYER : EntityTargetEvent.TargetReason.CLOSEST_ENTITY);
-            return (nmsTarget != null);
+            return (getGoalTarget() != null);
         }
         return true;
     }
