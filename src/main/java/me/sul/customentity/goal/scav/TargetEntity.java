@@ -1,4 +1,4 @@
-package me.sul.customentity.goal;
+package me.sul.customentity.goal.scav;
 
 import net.minecraft.server.v1_12_R1.EntityLiving;
 

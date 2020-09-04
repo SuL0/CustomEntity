@@ -1,15 +1,14 @@
 package me.sul.customentity.entity;
 
-import me.sul.customentity.goal.PathfinderGoalNearestTarget;
+import me.sul.customentity.goal.target.PathfinderGoalNearestTarget;
 import net.minecraft.server.v1_12_R1.*;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v1_12_R1.CraftWorld;
 import org.bukkit.entity.HumanEntity;
 
 
-// TODO: 30칸 안의 플레이어 자동 추적.
-// 문 두드릴 때 5%확률로 문 열림
-public class EntityZombie extends net.minecraft.server.v1_12_R1.EntityZombie implements CustomEntity {
+// TODO: 문 두드릴 때 5%확률로 문 열기
+public class EntityZombie extends net.minecraft.server.v1_12_R1.EntityZombie {
     private static final int FOLLOW_RANGE  = 30;
 
     public EntityZombie(Location loc) {

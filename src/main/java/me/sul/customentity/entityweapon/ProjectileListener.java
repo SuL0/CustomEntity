@@ -18,7 +18,7 @@ public class ProjectileListener implements Listener {
         Entity victim = e.getEntity();
         if (damager instanceof Projectile && damager.hasMetadata(EntityCrackShotWeapon.PROJ_DAMAGE_META) && victim instanceof Damageable) {
             Entity attacker = (((Projectile) damager).getShooter() instanceof Entity) ? ((Entity)((Projectile) damager).getShooter()) : null;
-            if (attacker != null && ((CraftEntity)damager).getHandle().getClass().equals(((CraftEntity)victim).getHandle().getClass())) {
+            if (attacker != null && ((CraftEntity)damager).getHandle().getClass().isInstance(((CraftEntity)victim).getHandle())) {
                 e.setCancelled(true);
                 return;
             }
