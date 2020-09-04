@@ -48,48 +48,6 @@ public class Area {
         return maxLocation;
     }
     public Location getCenterLocation() {
-        return (minLocation.add(maxLocation)).multiply(0.5);
+        return (minLocation.clone().add(maxLocation)).multiply(0.5);
     }
-    public Location getRandomLocation() {
-        double randX = getMinX() + (getMaxX()-getMinX())*random.nextFloat();
-        double randY = getMinY() + (getMaxY()-getMinY())*random.nextFloat();
-        double randZ = getMinZ() + (getMaxZ()-getMinZ())*random.nextFloat();
-        return new Location(getWorld(), randX, randY, randZ);
-    }
-    public Location getLocationForStroll(Location currentLoc, int minLength, int maxLength) {
-        for (int i=0; i<10; i++) {
-            double randX = ((random.nextBoolean()) ? 1:-1) * (random.nextFloat() * maxLength + minLength);
-            double randZ = ((random.nextBoolean()) ? 1:-1) * (random.nextFloat() * maxLength + minLength);
-            Location randLoc = currentLoc.clone().add(randX, 0, randZ);
-            if (!isAwayFromArea(randLoc)) {
-                return randLoc;
-            }
-        }
-        return currentLoc;
-    }
-
-
-    // NOTE: 여기에 y축은 배제시켰음.
-    public boolean isAwayFromArea(Location givenLoc) {
-        return (!(getMinX() <= givenLoc.getX() && givenLoc.getX() <= getMaxX() &&
-                getMinZ() <= givenLoc.getZ() && givenLoc.getZ() <= getMaxZ()));
-    }
-    public Location getClosestLocation(Location givenLoc) {
-        double[] location = new double[3];
-        double[] min = { getMinX(), getMinY(), getMinZ() }; // x, y, z
-        double[] max = { getMaxX(), getMaxY(), getMaxZ() }; // x, y, z
-        for (int i=0; i<3; i++) {
-            if (min[i] <= givenLoc.getX() && givenLoc.getX() <= max[i]) {
-                location[i] = givenLoc.getX();
-            } else {
-                if (min[i] > givenLoc.getX()) {
-                    location[i] = min[i];
-                } else {
-                    location[i] = max[i];
-                }
-            }
-        }
-        return new Location(givenLoc.getWorld(), location[0], location[1], location[2]);
-    }
-
 }
