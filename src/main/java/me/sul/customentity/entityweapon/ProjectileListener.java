@@ -16,7 +16,7 @@ public class ProjectileListener implements Listener {
         if (e.isCancelled()) return;
         Entity damager = e.getDamager();
         Entity victim = e.getEntity();
-        if (damager instanceof Projectile && damager.hasMetadata(EntityCrackShotWeapon.PROJ_DAMAGE_META) && victim instanceof Damageable) {
+        if (damager instanceof Projectile && damager.hasMetadata(GunUtil.PROJ_DAMAGE_META) && victim instanceof Damageable) {
             Entity attacker = (((Projectile) damager).getShooter() instanceof Entity) ? ((Entity)((Projectile) damager).getShooter()) : null;
             if (attacker != null && ((CraftEntity)damager).getHandle().getClass().isInstance(((CraftEntity)victim).getHandle())) {
                 e.setCancelled(true);
@@ -24,7 +24,7 @@ public class ProjectileListener implements Listener {
             }
 
             Projectile projectile = (Projectile) damager;
-            double damage = projectile.getMetadata(EntityCrackShotWeapon.PROJ_DAMAGE_META).get(0).asDouble();
+            double damage = projectile.getMetadata(GunUtil.PROJ_DAMAGE_META).get(0).asDouble();
             Vector knockbackVector = victim.getLocation().toVector().subtract(((Entity) projectile.getShooter()).getLocation().toVector()).normalize().multiply(0.3);
             CSDirector.getInstance().setTempVulnerability((LivingEntity) victim);
             e.setDamage(damage);

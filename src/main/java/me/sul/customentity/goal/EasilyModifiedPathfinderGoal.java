@@ -31,7 +31,7 @@ public class EasilyModifiedPathfinderGoal extends PathfinderGoal {
     public void e() { tick(); }
 
     public boolean canUse() { return false; } // 4틱마다 반복
-    public boolean canContinueToUse() { return canUse(); } // 1틱마다 반복
+    public boolean canContinueToUse() { return false; } // 1틱마다 반복
     public void start() { }
     public void stop() { }
     public void tick() { }
@@ -39,8 +39,8 @@ public class EasilyModifiedPathfinderGoal extends PathfinderGoal {
     // 기본
     public Random getRandom() { return nmsEntity.getRandom(); }
     public EntityLiving getGoalTarget() { return nmsEntity.getGoalTarget(); }
-    public void setGoalTarget(EntityLiving nmsTarget, EntityTargetEvent.TargetReason targetReasonIfTargetIsNotNull) {
-        nmsEntity.setGoalTarget(nmsTarget, (nmsTarget != null) ? targetReasonIfTargetIsNotNull : EntityTargetEvent.TargetReason.FORGOT_TARGET, true);
+    public void setGoalTarget(EntityLiving nmsTarget, EntityTargetEvent.TargetReason targetReason) {
+        nmsEntity.setGoalTarget(nmsTarget, (nmsTarget != null) ? targetReason : EntityTargetEvent.TargetReason.FORGOT_TARGET, true);
     }
     public void removeGoalTarget() { nmsEntity.setGoalTarget(null, EntityTargetEvent.TargetReason.FORGOT_TARGET, true); }
     public void stopNavigation() { PathfinderUtil.stopNavigation(nmsEntity); }

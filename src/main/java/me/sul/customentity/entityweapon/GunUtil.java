@@ -14,7 +14,7 @@ import org.bukkit.util.Vector;
 
 import java.util.Random;
 
-public class EntityCrackShotWeapon {
+public class GunUtil {
     public final static String PROJ_DAMAGE_META = "EntityCrackShotWeapon.Damage";
 
     // TODO: CrackShotProjectileBreakEvent 호출하게끔 CSA 변경

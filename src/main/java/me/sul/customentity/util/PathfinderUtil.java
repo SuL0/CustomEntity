@@ -66,7 +66,6 @@ public class PathfinderUtil {
 
     public static boolean isHoldingBow(EntityCreature me) { return !me.getItemInMainHand().isEmpty() && me.getItemInMainHand().getItem() == Items.BOW; }
 
-    public static void alertOthers(EntityCreature me) { alertOthers(me, 10, 20); }
     public static void alertOthers(EntityCreature me, int radiusAroundMe, int radiusAroundTarget) {
         if (me.getGoalTarget() == null) return;
         EntityLiving targetToAlert = me.getGoalTarget();
