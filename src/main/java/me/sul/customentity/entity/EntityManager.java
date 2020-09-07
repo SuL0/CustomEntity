@@ -1,9 +1,11 @@
 package me.sul.customentity.entity;
 
 import me.sul.customentity.util.CustomEntityRegistry;
+import org.bukkit.craftbukkit.v1_12_R1.entity.CraftEntity;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityCombustEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.world.ChunkLoadEvent;
 
 // NOTE: 몹 번호: https://pastebin.com/gPci2Kt0
@@ -31,5 +33,13 @@ public class EntityManager implements Listener {
 //        if (((CraftEntity)e.getEntity()).getHandle() instanceof EntityScav) {
             e.setCancelled(true);
 //        }
+    }
+
+    // NOTE: 이런거 EntityScavListener로 분리해야 하나?
+    @EventHandler
+    public void onDamage(EntityDamageEvent e) {
+        if (e.getCause() == EntityDamageEvent.DamageCause.FALL && ((CraftEntity)e.getEntity()).getHandle() instanceof EntityScav) {
+            e.setCancelled(true);
+        }
     }
 }

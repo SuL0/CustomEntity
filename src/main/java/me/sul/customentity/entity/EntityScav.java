@@ -1,10 +1,15 @@
 package me.sul.customentity.entity;
 
 import me.libraryaddict.disguise.disguisetypes.PlayerDisguise;
-import me.sul.customentity.goal.PathfinderGoalFindEntityAndShootIt;
 import me.sul.customentity.goal.PathfinderGoalRandomLookaround;
 import me.sul.customentity.goal.PathfinderGoalStrollInSpecificArea;
+import me.sul.customentity.goal.scav.*;
+import me.sul.customentity.goal.scav.phasegoal.PathfinderGoalScavChaseTargetLastSeen;
+import me.sul.customentity.goal.scav.phasegoal.PathfinderGoalScavHandleGun;
+import me.sul.customentity.goal.scav.phasegoal.PathfinderGoalScavLookForwardInBattle;
+import me.sul.customentity.goal.scav.phasegoal.PathfinderGoalScavMovementWhileShootingTarget;
 import me.sul.customentity.spawnarea.Area;
+import me.sul.customentity.spawnarea.AreaUtil;
 import net.minecraft.server.v1_12_R1.EntitySkeleton;
 import net.minecraft.server.v1_12_R1.GenericAttributes;
 import net.minecraft.server.v1_12_R1.PathfinderGoalFloat;
@@ -15,15 +20,18 @@ import org.bukkit.craftbukkit.v1_12_R1.CraftWorld;
 
 // NOTE: 이상하게 r() 호출 후 생성자 호출됨
 // TODO: 50칸 밖의 EntityScav는 안보이도록 설정
-public class EntityScav extends EntitySkeleton implements CustomEntity {
+public class EntityScav extends EntitySkeleton {
     private static final String ENTITY_NAME = "§c§lAI BOT";
     private static final int FOLLOW_RANGE  = 50;
 
+    public ScavBattlePhase scavBattlePhase;
+    public BattlePhaseManager battlePhaseManager;
+    public int unseenTick = 0;
+
     private final Area area;
-    private PathfinderGoalFindEntityAndShootIt<EntityScav> pathfinderGoalFindEntityAndShootIt;
 
     public EntityScav(Area area) {
-        this(area, area.getRandomLocation());
+        this(area, AreaUtil.getRandomLocation(area));
     }
     public EntityScav(Area area, Location loc) {
         super (((CraftWorld)loc.getWorld()).getHandle());
@@ -51,20 +59,28 @@ public class EntityScav extends EntitySkeleton implements CustomEntity {
     // 2가 start() 후 1이 start() -> 2는 중단됨
 
     // targetSelector은 타게팅만 하는 곳.
-    // 그런데 정말 재활용 하기 좋을 정도로 세분화해서 만들어야하며, 복잡한 매커니즘을 적용할 수 없음. -> 그냥 goalSelector 한개에 다 넣는게 좋은 방법임.
+
     private void registerGoalSelector() {
-        pathfinderGoalFindEntityAndShootIt = new PathfinderGoalFindEntityAndShootIt<>(this, 3, 4F, 5.0F, 7);
+//        // priority에 대체 무슨 의미가 있지
+//        goalSelector.a(2, new TestGoal(2));
+//        goalSelector.a(1, new TestGoal(1));
+
+        registerTargetSelector();
         goalSelector.a(1, new PathfinderGoalFloat(this));
         goalSelector.a(2, new PathfinderGoalOpenDoor(this, false));
-        goalSelector.a(4, pathfinderGoalFindEntityAndShootIt);
+
+        battlePhaseManager = new BattlePhaseManager(this);
+        goalSelector.a(4, new PathfinderGoalScavLookForwardInBattle(this));
+        goalSelector.a(4, new PathfinderGoalScavMovementWhileShootingTarget(this));
+        goalSelector.a(4, new PathfinderGoalScavHandleGun(this));
+        goalSelector.a(4, new PathfinderGoalScavChaseTargetLastSeen(this));
+
         goalSelector.a(5, new PathfinderGoalStrollInSpecificArea<>(this, area, 1.0F, 55));
         goalSelector.a(6, new PathfinderGoalRandomLookaround(this, 0.5F));
     }
-
-    public PathfinderGoalFindEntityAndShootIt<EntityScav> getPathfinderGoalFindEntityAndShootIt() {
-        return pathfinderGoalFindEntityAndShootIt;
+    private void registerTargetSelector() {
+        targetSelector.a(1, new PathfinderGoalScavTargetSelector(this));
     }
-
 
     @Override
     public void r() {}
