@@ -6,6 +6,7 @@ import java.util.Random;
 
 public class AreaUtil {
     private static Random random = new Random();
+
     public static Location getRandomLocation(Area area) {
         double randX = area.getMinX() + (area.getMaxX()-area.getMinX())*random.nextFloat();
         double randY = area.getMinY() + (area.getMaxY()-area.getMinY())*random.nextFloat();
@@ -13,6 +14,8 @@ public class AreaUtil {
         return new Location(area.getWorld(), randX, randY, randZ);
     }
 
+    
+    // TODO: y축 지원 추가해야 함. e.g. 2층 이상의 건물 및 지하
     public static Location getLocationForStroll(Area area, Location currentLoc, int minLength, int maxLength) {
         for (int i=0; i<10; i++) {
             double randX = ((random.nextBoolean()) ? 1:-1) * (random.nextFloat() * maxLength + minLength);
@@ -26,11 +29,12 @@ public class AreaUtil {
     }
 
 
-    // NOTE: 여기에 y축은 배제시켰음.
     public static boolean isAwayFromArea(Area area, Location givenLoc) {
         return (!(area.getMinX() <= givenLoc.getX() && givenLoc.getX() <= area.getMaxX() &&
-                area.getMinZ() <= givenLoc.getZ() && givenLoc.getZ() <= area.getMaxZ()));
+                area.getMinY() <= givenLoc.getY() && givenLoc.getY() <= area.getMaxY()) &&
+                area.getMinZ() <= givenLoc.getZ() && givenLoc.getZ() <= area.getMaxZ());
     }
+
 
     public static Location getClosestLocation(Area area, Location givenLoc) {
         double[] location = new double[3];

@@ -3,14 +3,11 @@ package me.sul.customentity.spawnarea;
 import org.bukkit.Location;
 import org.bukkit.World;
 
-import java.util.Random;
-
 
 // TODO: y좌표는 없앨까?
 public class Area {
     private final Location minLocation;
     private final Location maxLocation;
-    private static final Random random = new Random();
 
     public Area(Location loc1, Location loc2) {
         this(loc1.getWorld(), loc1.getX(), loc1.getY(), loc1.getZ(), loc2.getX(), loc2.getY(), loc2.getZ());
@@ -40,12 +37,6 @@ public class Area {
     }
     public double getMaxZ() {
         return maxLocation.getZ();
-    }
-    public Location getMinLocation() {
-        return minLocation;
-    }
-    public Location getMaxLocation() {
-        return maxLocation;
     }
     public Location getCenterLocation() {
         return (minLocation.clone().add(maxLocation)).multiply(0.5);
