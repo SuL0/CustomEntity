@@ -51,7 +51,7 @@ public class EasilyModifiedPathfinderGoal extends PathfinderGoal {
 
     public boolean isInTargetableState(EntityLiving nmsOpponent) { return PathfinderUtil.isInTargetableState(bukkitEntity, nmsOpponent, PathfinderUtil.getFollowDistance(nmsEntity)); }
 
-    public boolean isInSight(Entity bukkitOpponent) { return PathfinderUtil.isInSight(bukkitEntity, bukkitOpponent, 140); }
+    public boolean isInSight(Entity bukkitOpponent) { return PathfinderUtil.isInSight(bukkitEntity, bukkitOpponent, 130); }
 
     public double getFollowDistance() { return PathfinderUtil.getFollowDistance(nmsEntity); }
 }

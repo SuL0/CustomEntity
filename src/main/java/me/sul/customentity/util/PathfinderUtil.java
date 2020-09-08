@@ -1,23 +1,14 @@
 package me.sul.customentity.util;
 
-import me.sul.customentity.Main;
-import me.sul.customentity.entity.EntityScav;
 import net.minecraft.server.v1_12_R1.*;
-import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
-import org.bukkit.craftbukkit.v1_12_R1.entity.CraftEntity;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
-import org.bukkit.event.entity.EntityTargetEvent;
 import org.bukkit.util.Vector;
 
-import java.util.HashSet;
 import java.util.Random;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 public class PathfinderUtil {
     public static Random random = new Random();
@@ -39,7 +30,7 @@ public class PathfinderUtil {
     public static boolean isInTargetableState(Entity me, EntityLiving nmsOpponent, double maxDistance) {
         if (nmsOpponent == null || !nmsOpponent.isAlive()) return false;
         if (nmsOpponent instanceof EntityPlayer && (((EntityHuman)nmsOpponent).abilities.isInvulnerable || ((Player)nmsOpponent.getBukkitEntity()).getGameMode() != GameMode.SURVIVAL)) return false;
-        if (nmsOpponent.getBukkitEntity().getLocation().distance(me.getLocation()) > maxDistance) return false;
+        if (!nmsOpponent.getBukkitEntity().getWorld().equals(me.getWorld()) || nmsOpponent.getBukkitEntity().getLocation().distance(me.getLocation()) > maxDistance) return false;
         return true;
     }
 
@@ -65,25 +56,4 @@ public class PathfinderUtil {
     }
 
     public static boolean isHoldingBow(EntityCreature me) { return !me.getItemInMainHand().isEmpty() && me.getItemInMainHand().getItem() == Items.BOW; }
-
-    public static void alertOthers(EntityCreature me, int radiusAroundMe, int radiusAroundTarget) {
-        if (me.getGoalTarget() == null) return;
-        EntityLiving targetToAlert = me.getGoalTarget();
-        Set<Entity> nearBukkitEntityList = new HashSet<>();
-
-        nearBukkitEntityList.addAll(me.getBukkitEntity().getNearbyEntities(radiusAroundMe, radiusAroundMe, radiusAroundMe));  // nmsEntity 주변
-        nearBukkitEntityList.addAll(me.getGoalTarget().getBukkitEntity().getNearbyEntities(radiusAroundTarget, radiusAroundTarget, radiusAroundTarget));  // 플레이어 주변
-        nearBukkitEntityList.removeIf(e -> !(e instanceof Monster));
-
-        for (EntityCreature nearNmsEntity : nearBukkitEntityList.stream().map(e -> (EntityCreature) ((CraftEntity)e).getHandle()).collect(Collectors.toList())) {
-            if (nearNmsEntity.getClass().isInstance(me)) {
-                if (nearNmsEntity.getGoalTarget() != null) return;
-                Bukkit.getScheduler().runTaskLater(Main.getInstance(), () -> {
-                    if (nearNmsEntity.getGoalTarget() == null && PathfinderUtil.isInTargetableState(me.getBukkitEntity(), targetToAlert, getFollowDistance(me))) {
-                        nearNmsEntity.setGoalTarget(targetToAlert, EntityTargetEvent.TargetReason.CUSTOM, true);
-                    }
-                }, random.nextInt(15) + 5);
-            }
-        }
-    }
 }

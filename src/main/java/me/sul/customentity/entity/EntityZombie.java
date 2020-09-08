@@ -1,6 +1,6 @@
 package me.sul.customentity.entity;
 
-import me.sul.customentity.goal.target.PathfinderGoalNearestTarget;
+import me.sul.customentity.goal.PathfinderGoalNearestTarget;
 import net.minecraft.server.v1_12_R1.*;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v1_12_R1.CraftWorld;
