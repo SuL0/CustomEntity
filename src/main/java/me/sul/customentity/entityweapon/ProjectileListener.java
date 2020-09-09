@@ -1,8 +1,12 @@
 package me.sul.customentity.entityweapon;
 
 import com.shampaggon.crackshot.CSDirector;
+import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v1_12_R1.entity.CraftEntity;
-import org.bukkit.entity.*;
+import org.bukkit.entity.Damageable;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -11,6 +15,7 @@ import org.bukkit.util.Vector;
 
 public class ProjectileListener implements Listener {
     // 엔티티가 쏜 총알에 맞았을 때
+    // damager과 attacker 헷갈리지 않게 주의
     @EventHandler(priority = EventPriority.LOWEST)
     public void onDamage(EntityDamageByEntityEvent e) {
         if (e.isCancelled()) return;
@@ -18,7 +23,7 @@ public class ProjectileListener implements Listener {
         Entity victim = e.getEntity();
         if (damager instanceof Projectile && damager.hasMetadata(GunUtil.PROJ_DAMAGE_META) && victim instanceof Damageable) {
             Entity attacker = (((Projectile) damager).getShooter() instanceof Entity) ? ((Entity)((Projectile) damager).getShooter()) : null;
-            if (attacker != null && ((CraftEntity)damager).getHandle().getClass().isInstance(((CraftEntity)victim).getHandle())) {
+            if (attacker != null && ((CraftEntity)attacker).getHandle().getClass().isInstance(((CraftEntity)victim).getHandle())) {
                 e.setCancelled(true);
                 return;
             }
