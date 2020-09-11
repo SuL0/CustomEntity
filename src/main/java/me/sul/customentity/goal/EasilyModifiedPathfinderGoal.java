@@ -1,9 +1,7 @@
 package me.sul.customentity.goal;
 
 import me.sul.customentity.util.PathfinderUtil;
-import net.minecraft.server.v1_12_R1.EntityCreature;
-import net.minecraft.server.v1_12_R1.EntityLiving;
-import net.minecraft.server.v1_12_R1.PathfinderGoal;
+import net.minecraft.server.v1_12_R1.*;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.event.entity.EntityTargetEvent;
@@ -36,13 +34,28 @@ public class EasilyModifiedPathfinderGoal extends PathfinderGoal {
     public void stop() { }
     public void tick() { }
 
+    public enum Flag {
+        MOVE_OR_TARGET,
+        LOOK,
+        JUMP
+    }
+    public void setFlag(Flag ...flags) { // (중복되는 goal 방지 하지 않으려면 없어도 됨)
+        int value = 0;
+        for (Flag flag : flags) {
+            if (flag == Flag.MOVE_OR_TARGET) value += 1;
+            else if (flag == Flag.LOOK) value += 2;
+            else if (flag == Flag.JUMP) value += 4;
+        }
+        this.a(value);
+    }
+
     // 기본
     public Random getRandom() { return nmsEntity.getRandom(); }
     public EntityLiving getGoalTarget() { return nmsEntity.getGoalTarget(); }
-    public void setGoalTarget(EntityLiving nmsTarget, EntityTargetEvent.TargetReason targetReason) {
-        nmsEntity.setGoalTarget(nmsTarget, (nmsTarget != null) ? targetReason : EntityTargetEvent.TargetReason.FORGOT_TARGET, true);
-    }
+    public void setGoalTarget(EntityLiving nmsTarget, EntityTargetEvent.TargetReason targetReason) { nmsEntity.setGoalTarget(nmsTarget, (nmsTarget != null) ? targetReason : EntityTargetEvent.TargetReason.FORGOT_TARGET, true); }
     public void removeGoalTarget() { nmsEntity.setGoalTarget(null, EntityTargetEvent.TargetReason.FORGOT_TARGET, true); }
+
+    public NavigationAbstract getNavigation() { return nmsEntity.getNavigation(); }
     public void stopNavigation() { PathfinderUtil.stopNavigation(nmsEntity); }
     public boolean isNavigationDone() { return PathfinderUtil.isNavigationDone(nmsEntity); }
 
