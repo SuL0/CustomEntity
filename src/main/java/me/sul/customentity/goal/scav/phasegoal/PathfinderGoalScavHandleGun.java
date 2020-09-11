@@ -3,7 +3,7 @@ package me.sul.customentity.goal.scav.phasegoal;
 import me.sul.customentity.entity.EntityScav;
 import me.sul.customentity.entityweapon.GunUtil;
 import me.sul.customentity.goal.EasilyModifiedPathfinderGoal;
-import me.sul.customentity.goal.scav.ScavBattlePhase;
+import me.sul.customentity.goal.scav.ScavCombatPhase;
 
 public class PathfinderGoalScavHandleGun extends EasilyModifiedPathfinderGoal {
     private static final int fireDelay = 3;
@@ -22,7 +22,7 @@ public class PathfinderGoalScavHandleGun extends EasilyModifiedPathfinderGoal {
 
     @Override
     public boolean canUse() {
-        return nmsEntity.scavBattlePhase == ScavBattlePhase.SHOOT_TARGET && isInTargetableState(getGoalTarget());
+        return nmsEntity.scavCombatPhase == ScavCombatPhase.SHOOT_TARGET;
     }
 
     @Override

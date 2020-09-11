@@ -6,7 +6,7 @@ import me.sul.customentity.goal.PathfinderGoalStrollInSpecificArea;
 import me.sul.customentity.goal.scav.*;
 import me.sul.customentity.goal.scav.phasegoal.PathfinderGoalScavChaseTargetLastSeen;
 import me.sul.customentity.goal.scav.phasegoal.PathfinderGoalScavHandleGun;
-import me.sul.customentity.goal.scav.phasegoal.PathfinderGoalScavLookForwardInBattle;
+import me.sul.customentity.goal.scav.phasegoal.PathfinderGoalScavLookForwardInCombat;
 import me.sul.customentity.goal.scav.phasegoal.PathfinderGoalScavMovementWhileShootingTarget;
 import me.sul.customentity.spawnarea.Area;
 import me.sul.customentity.spawnarea.AreaUtil;
@@ -24,8 +24,8 @@ public class EntityScav extends EntitySkeleton {
     private static final String ENTITY_NAME = "§c§lAI BOT";
     private static final int FOLLOW_RANGE  = 50;
 
-    public ScavBattlePhase scavBattlePhase;
-    public BattlePhaseManager battlePhaseManager;
+    public ScavCombatPhase scavCombatPhase;
+    public ScavCombatPhaseManager scavCombatPhaseManager;
     public int unseenTick = 0;
 
     private final Area area;
@@ -61,16 +61,13 @@ public class EntityScav extends EntitySkeleton {
     // targetSelector은 타게팅만 하는 곳.
 
     private void registerGoalSelector() {
-//        // priority에 대체 무슨 의미가 있지
-//        goalSelector.a(2, new TestGoal(2));
-//        goalSelector.a(1, new TestGoal(1));
-
+        // priority에 대체 무슨 의미가 있지
         registerTargetSelector();
         goalSelector.a(1, new PathfinderGoalFloat(this));
         goalSelector.a(2, new PathfinderGoalOpenDoor(this, false));
 
-        battlePhaseManager = new BattlePhaseManager(this);
-        goalSelector.a(4, new PathfinderGoalScavLookForwardInBattle(this));
+        scavCombatPhaseManager = new ScavCombatPhaseManager(this);
+        goalSelector.a(4, new PathfinderGoalScavLookForwardInCombat(this));
         goalSelector.a(4, new PathfinderGoalScavMovementWhileShootingTarget(this));
         goalSelector.a(4, new PathfinderGoalScavHandleGun(this));
         goalSelector.a(4, new PathfinderGoalScavChaseTargetLastSeen(this));

@@ -2,7 +2,7 @@ package me.sul.customentity.goal.scav.phasegoal;
 
 import me.sul.customentity.entity.EntityScav;
 import me.sul.customentity.goal.EasilyModifiedPathfinderGoal;
-import me.sul.customentity.goal.scav.ScavBattlePhase;
+import me.sul.customentity.goal.scav.ScavCombatPhase;
 
 import java.lang.reflect.Field;
 
@@ -19,7 +19,7 @@ public class PathfinderGoalScavMovementWhileShootingTarget extends EasilyModifie
 
     @Override
     public boolean canUse() {
-        return nmsEntity.scavBattlePhase == ScavBattlePhase.SHOOT_TARGET;
+        return nmsEntity.scavCombatPhase == ScavCombatPhase.SHOOT_TARGET;
     }
 
     @Override

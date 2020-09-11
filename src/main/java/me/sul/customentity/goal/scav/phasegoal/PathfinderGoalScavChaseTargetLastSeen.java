@@ -2,12 +2,14 @@ package me.sul.customentity.goal.scav.phasegoal;
 
 import me.sul.customentity.entity.EntityScav;
 import me.sul.customentity.goal.EasilyModifiedPathfinderGoal;
-import me.sul.customentity.goal.scav.ScavBattlePhase;
+import me.sul.customentity.goal.scav.ScavCombatPhase;
+import me.sul.customentity.goal.scav.ScavCombatPhaseManager;
 import me.sul.customentity.util.EntityAnimation;
 import net.minecraft.server.v1_12_R1.EnumHand;
 
 public class PathfinderGoalScavChaseTargetLastSeen extends EasilyModifiedPathfinderGoal {
     private final EntityScav nmsEntity;
+
 
     public PathfinderGoalScavChaseTargetLastSeen(EntityScav nmsEntity) {
         super(nmsEntity);
@@ -16,13 +18,13 @@ public class PathfinderGoalScavChaseTargetLastSeen extends EasilyModifiedPathfin
 
     @Override
     public boolean canUse() {
-        return nmsEntity.scavBattlePhase == ScavBattlePhase.CHASE_TARGET_LASTSEEN && isInTargetableState(getGoalTarget()); // , ScavBattlePhase의 업데이트가 1틱이 아니기때문에, target이 계속 존재한다는 보장을 할 수 없음.
+        return nmsEntity.scavCombatPhase == ScavCombatPhase.CHASE_TARGET_LASTSEEN && isInTargetableState(getGoalTarget());
     }
 
     @Override
     public boolean canContinueToUse() {
         if (isNavigationDone()) {
-            nmsEntity.unseenTick = 10000; // 전투상태 강제로 해제하기
+            ScavCombatPhaseManager.forceEntityToGetOutOfCombat(nmsEntity);
             return false;
         }
         return canUse();
@@ -37,7 +39,7 @@ public class PathfinderGoalScavChaseTargetLastSeen extends EasilyModifiedPathfin
         nmsEntity.n(0.0F);  // strafeRight
 
         EntityAnimation.startUsingItem(nmsEntity, EnumHand.OFF_HAND); // 방패 사용
-        moveToLoc(getGoalTarget().getBukkitEntity().getLocation(), 1.3D, true);
+        moveToLoc(getGoalTarget().getBukkitEntity().getLocation().add(0, 1, 0), 1.3D, true);
     }
 
     @Override
