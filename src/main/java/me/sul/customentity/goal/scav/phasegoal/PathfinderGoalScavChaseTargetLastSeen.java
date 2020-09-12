@@ -8,8 +8,9 @@ import me.sul.customentity.util.EntityAnimation;
 import net.minecraft.server.v1_12_R1.EnumHand;
 
 public class PathfinderGoalScavChaseTargetLastSeen extends EasilyModifiedPathfinderGoal {
-    private final EntityScav nmsEntity;
+    public static double CHASE_SPEED = 1.3D;
 
+    private final EntityScav nmsEntity;
 
     public PathfinderGoalScavChaseTargetLastSeen(EntityScav nmsEntity) {
         super(nmsEntity);
@@ -39,7 +40,7 @@ public class PathfinderGoalScavChaseTargetLastSeen extends EasilyModifiedPathfin
         nmsEntity.n(0.0F);  // strafeRight
 
         EntityAnimation.startUsingItem(nmsEntity, EnumHand.OFF_HAND); // 방패 사용
-        moveToLoc(getGoalTarget().getBukkitEntity().getLocation().add(0, 1, 0), 1.3D, true);
+        moveToLoc(getGoalTarget().getBukkitEntity().getLocation().add(0, 1, 0), CHASE_SPEED, true);
     }
 
     @Override

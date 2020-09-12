@@ -8,7 +8,7 @@ import org.bukkit.event.entity.EntityTargetEvent;
 
 import java.util.Random;
 
-public class EasilyModifiedPathfinderGoal extends PathfinderGoal {
+public abstract class EasilyModifiedPathfinderGoal extends PathfinderGoal {
     public final EntityCreature nmsEntity;
     public final Entity bukkitEntity;
 
@@ -53,7 +53,7 @@ public class EasilyModifiedPathfinderGoal extends PathfinderGoal {
     public Random getRandom() { return nmsEntity.getRandom(); }
     public EntityLiving getGoalTarget() { return nmsEntity.getGoalTarget(); }
     public void setGoalTarget(EntityLiving nmsTarget, EntityTargetEvent.TargetReason targetReason) { nmsEntity.setGoalTarget(nmsTarget, (nmsTarget != null) ? targetReason : EntityTargetEvent.TargetReason.FORGOT_TARGET, true); }
-    public void removeGoalTarget() { nmsEntity.setGoalTarget(null, EntityTargetEvent.TargetReason.FORGOT_TARGET, true); }
+    public void removeGoalTarget() { PathfinderUtil.removeGoalTarget(nmsEntity); }
 
     public NavigationAbstract getNavigation() { return nmsEntity.getNavigation(); }
     public void stopNavigation() { PathfinderUtil.stopNavigation(nmsEntity); }

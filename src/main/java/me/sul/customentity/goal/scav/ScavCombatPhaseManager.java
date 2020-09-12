@@ -3,7 +3,6 @@ package me.sul.customentity.goal.scav;
 import me.sul.customentity.entity.EntityScav;
 import me.sul.customentity.util.PathfinderUtil;
 import net.minecraft.server.v1_12_R1.EntityLiving;
-import org.bukkit.Bukkit;
 import org.bukkit.event.entity.EntityTargetEvent;
 
 public class ScavCombatPhaseManager {

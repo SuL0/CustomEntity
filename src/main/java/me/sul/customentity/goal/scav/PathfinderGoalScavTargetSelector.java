@@ -134,7 +134,7 @@ public class PathfinderGoalScavTargetSelector extends EasilyModifiedPathfinderGo
 
         setGoalTarget(nmsTarget, EntityTargetEvent.TargetReason.CUSTOM);
         if (alertOther) {
-            ScavUtil.alertOthers(nmsEntity, 100, 0);
+            ScavUtil.alertOthers(nmsEntity, 25, 0);
         }
     }
 

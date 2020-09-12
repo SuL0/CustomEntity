@@ -6,12 +6,13 @@ import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.event.entity.EntityTargetEvent;
 import org.bukkit.util.Vector;
 
-import java.util.Random;
+import java.lang.reflect.Field;
 
 public class PathfinderUtil {
-    public static Random random = new Random();
+    private static Field navigationBlockPositionField;
 
     // Navigation은 목적지를 찍으면 엔티티가 갈 수 있는 가장 근접한 위치로 목적지를 바꿔줌. -> y축 신경쓸거 없이 그냥 대충 목적지 찍으면 알아서 계산해줌
     public static void moveToLoc(EntityCreature me, Location destinationLoc, double speed, boolean canOpenDoors) {
@@ -20,11 +21,29 @@ public class PathfinderUtil {
         PathEntity goalPath = navigation.a(destinationLoc.getX(), destinationLoc.getY(), destinationLoc.getZ());
         me.getNavigation().a(goalPath, speed);
     }
+
     public static void stopNavigation(EntityCreature me) {
         me.getNavigation().p();
     }
     public static boolean isNavigationDone(EntityCreature me) {
         return me.getNavigation().o();
+    }
+    public static Location getNavigationDestinationLoc(net.minecraft.server.v1_12_R1.Entity entityCreature, NavigationAbstract navigation) {
+        if (navigationBlockPositionField == null) {
+            try {
+                navigationBlockPositionField = NavigationAbstract.class.getDeclaredField("q");
+                navigationBlockPositionField.setAccessible(true);
+            } catch (NoSuchFieldException e) {
+                e.printStackTrace();
+            }
+        }
+        try {
+            BlockPosition blockPosition = (BlockPosition) navigationBlockPositionField.get(navigation);
+            if (blockPosition != null) {
+                return new Location(entityCreature.getBukkitEntity().getWorld(), blockPosition.getX(), blockPosition.getY(), blockPosition.getZ());
+            }
+        } catch (IllegalAccessException ignored) { }
+        return entityCreature.getBukkitEntity().getLocation();  // 엔티티가 navigation을 한번도 이용하지 않았다면, blockPosition을 가져올 수 없을 수 있음.
     }
 
     public static boolean isInTargetableState(Entity me, EntityLiving nmsOpponent, double maxDistance) {
@@ -48,6 +67,10 @@ public class PathfinderUtil {
     private static double getAngleBetweenTwoVectors(Vector aVec, Vector bVec) {
         double cosAngle = (aVec.clone().dot(bVec)) / (aVec.length() * bVec.length());
         return Math.toDegrees(Math.acos(cosAngle));
+    }
+
+    public static void removeGoalTarget(EntityCreature me) {
+        me.setGoalTarget(null, EntityTargetEvent.TargetReason.CUSTOM, true);
     }
 
     public static double getFollowDistance(EntityCreature me) {
