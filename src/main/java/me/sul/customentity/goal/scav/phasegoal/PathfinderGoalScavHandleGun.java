@@ -22,7 +22,7 @@ public class PathfinderGoalScavHandleGun extends EasilyModifiedPathfinderGoal {
 
     @Override
     public boolean canUse() {
-        return nmsEntity.scavCombatPhase == ScavCombatPhase.SHOOT_TARGET;
+        return nmsEntity.getScavCombatPhase() == ScavCombatPhase.SHOOT_TARGET;
     }
 
     @Override

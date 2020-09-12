@@ -2,7 +2,7 @@ package me.sul.customentity.entityweapon;
 
 import com.rhetorical.soundscape.SoundScapeAPI;
 import me.sul.customentity.Main;
-import me.sul.customentity.event.CustomEntityShootEvent;
+import me.sul.customentity.entityweapon.event.CEWeaponShootEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
@@ -34,7 +34,7 @@ public class GunUtil {
         projBullet.setVelocity(projVector);
         projBullet.setMetadata(PROJ_DAMAGE_META, new FixedMetadataValue(Main.getInstance(), damage));
         SoundScapeAPI.playSound(fireLoc, "akshoot", 1, 1, 50);
-        Bukkit.getPluginManager().callEvent(new CustomEntityShootEvent(entity, projBullet));
+        Bukkit.getPluginManager().callEvent(new CEWeaponShootEvent(entity, projBullet));
     }
 
 }

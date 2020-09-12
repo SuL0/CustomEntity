@@ -1,5 +1,7 @@
 package me.sul.customentity.entity;
 
+import lombok.Getter;
+import lombok.Setter;
 import me.libraryaddict.disguise.disguisetypes.PlayerDisguise;
 import me.sul.customentity.goal.PathfinderGoalRandomLookaround;
 import me.sul.customentity.goal.PathfinderGoalStrollInSpecificArea;
@@ -24,9 +26,9 @@ public class EntityScav extends EntitySkeleton {
     private static final String ENTITY_NAME = "§c§lAI BOT";
     private static final int FOLLOW_RANGE  = 50;
 
-    public ScavCombatPhase scavCombatPhase;
-    public ScavCombatPhaseManager scavCombatPhaseManager;
-    public int unseenTick = 0;
+    private @Getter @Setter ScavCombatPhase scavCombatPhase;
+    private @Getter ScavCombatPhaseManager scavCombatPhaseManager;
+    private @Getter @Setter int unseenTick = 0;
 
     private final Area area;
 

@@ -19,7 +19,7 @@ public class PathfinderGoalScavChaseTargetLastSeen extends EasilyModifiedPathfin
 
     @Override
     public boolean canUse() {
-        return nmsEntity.scavCombatPhase == ScavCombatPhase.CHASE_TARGET_LASTSEEN && isInTargetableState(getGoalTarget());
+        return nmsEntity.getScavCombatPhase() == ScavCombatPhase.CHASE_TARGET_LASTSEEN && isInTargetableState(getGoalTarget());
     }
 
     @Override

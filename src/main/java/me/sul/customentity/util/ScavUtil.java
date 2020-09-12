@@ -43,7 +43,7 @@ public class ScavUtil {
                 .collect(Collectors.toList())) {
 
             // 처음 보는 적
-            if (nearEntityScav.scavCombatPhase == ScavCombatPhase.NOT_IN_COMBAT) {
+            if (nearEntityScav.getScavCombatPhase() == ScavCombatPhase.NOT_IN_COMBAT) {
                 Bukkit.getScheduler().runTaskLater(Main.getInstance(), () -> {  // 아래의 코드를 실행할 때는 일정 시간이 흘렀음을 주의해야 함 !
                     if (nearEntityScav.isAlive() && nearEntityScav.getGoalTarget() == null
                             && PathfinderUtil.isInTargetableState(nearEntityScav.getBukkitEntity(), target, PathfinderUtil.getFollowDistance(nearEntityScav))) {
@@ -53,7 +53,7 @@ public class ScavUtil {
             }
 
             // 똑같은 적에 대한 위치 업데이트
-            else if (nearEntityScav.scavCombatPhase == ScavCombatPhase.CHASE_TARGET_LASTSEEN && Objects.requireNonNull(nearEntityScav.getGoalTarget()).equals(target)) {
+            else if (nearEntityScav.getScavCombatPhase() == ScavCombatPhase.CHASE_TARGET_LASTSEEN && Objects.requireNonNull(nearEntityScav.getGoalTarget()).equals(target)) {
                 Location currentDestinationLoc = PathfinderUtil.getNavigationDestinationLoc(target, nearEntityScav.getNavigation());
                 Location targetLoc = target.getBukkitEntity().getLocation();
                 if (currentDestinationLoc.distance(targetLoc) >= 12) {  // 현재 몹이 가고 있는 목적지와 거리가 12칸 이상 차이날 경우에만 실행

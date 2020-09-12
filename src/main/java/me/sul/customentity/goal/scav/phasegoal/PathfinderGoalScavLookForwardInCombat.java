@@ -14,7 +14,7 @@ public class PathfinderGoalScavLookForwardInCombat extends EasilyModifiedPathfin
 
     @Override
     public boolean canUse() {
-        return nmsEntity.scavCombatPhase == ScavCombatPhase.SHOOT_TARGET || nmsEntity.scavCombatPhase == ScavCombatPhase.CHASE_TARGET_LASTSEEN;
+        return nmsEntity.getScavCombatPhase() == ScavCombatPhase.SHOOT_TARGET || nmsEntity.getScavCombatPhase() == ScavCombatPhase.CHASE_TARGET_LASTSEEN;
     }
 
     @Override
@@ -24,10 +24,10 @@ public class PathfinderGoalScavLookForwardInCombat extends EasilyModifiedPathfin
 
     @Override
     public void tick() {
-        if (nmsEntity.scavCombatPhase == ScavCombatPhase.SHOOT_TARGET) {
+        if (nmsEntity.getScavCombatPhase() == ScavCombatPhase.SHOOT_TARGET) {
             nmsEntity.getControllerLook().a(getGoalTarget(), 30.0F, 30.0F);  // setLookAt
         }
-        else if (nmsEntity.scavCombatPhase == ScavCombatPhase.CHASE_TARGET_LASTSEEN) {
+        else if (nmsEntity.getScavCombatPhase() == ScavCombatPhase.CHASE_TARGET_LASTSEEN) {
             // TODO: 가고있는 방향으로
             nmsEntity.getControllerLook().a(getGoalTarget(), 30.0F, 30.0F);  // setLookAt
         }

@@ -19,7 +19,7 @@ public class PathfinderGoalScavMovementWhileShootingTarget extends EasilyModifie
 
     @Override
     public boolean canUse() {
-        return nmsEntity.scavCombatPhase == ScavCombatPhase.SHOOT_TARGET;
+        return nmsEntity.getScavCombatPhase() == ScavCombatPhase.SHOOT_TARGET;
     }
 
     @Override

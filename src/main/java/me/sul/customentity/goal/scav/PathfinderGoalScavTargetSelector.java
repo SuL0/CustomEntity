@@ -45,8 +45,8 @@ public class PathfinderGoalScavTargetSelector extends EasilyModifiedPathfinderGo
         if (tickCnt == Integer.MAX_VALUE) tickCnt = 0;
         if (tickCnt++ % TARGET_UPDATE_PERIOD == 0 || (getGoalTarget() != null && !isInTargetableState(getGoalTarget()))) { // , 원래 유지하던 타겟이 공격할 수 없는 상태가 되면, 바로 다른 타겟을 찾아봄.
             searchAndSelectTarget();
-            nmsEntity.scavCombatPhaseManager.updateUnseenTicks(canSeeTarget, TARGET_UPDATE_PERIOD);
-            nmsEntity.scavCombatPhaseManager.updateCombatPhase();
+            nmsEntity.getScavCombatPhaseManager().updateUnseenTicks(canSeeTarget, TARGET_UPDATE_PERIOD);
+            nmsEntity.getScavCombatPhaseManager().updateCombatPhase();
         }
     }
 
@@ -140,6 +140,6 @@ public class PathfinderGoalScavTargetSelector extends EasilyModifiedPathfinderGo
     @Override
     public void removeGoalTarget() {
         super.removeGoalTarget();
-        nmsEntity.unseenTick = 0;
+        nmsEntity.setUnseenTick(0);
     }
 }

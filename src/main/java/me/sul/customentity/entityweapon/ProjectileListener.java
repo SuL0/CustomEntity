@@ -1,7 +1,6 @@
 package me.sul.customentity.entityweapon;
 
 import com.shampaggon.crackshot.CSDirector;
-import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.v1_12_R1.entity.CraftEntity;
 import org.bukkit.entity.Damageable;
 import org.bukkit.entity.Entity;
