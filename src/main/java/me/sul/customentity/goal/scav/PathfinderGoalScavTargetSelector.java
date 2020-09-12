@@ -1,6 +1,5 @@
 package me.sul.customentity.goal.scav;
 
-import com.sun.istack.internal.NotNull;
 import me.sul.customentity.entity.EntityScav;
 import me.sul.customentity.goal.EasilyModifiedPathfinderGoal;
 import me.sul.customentity.util.DistanceComparator;
@@ -129,12 +128,12 @@ public class PathfinderGoalScavTargetSelector extends EasilyModifiedPathfinderGo
 
 
 
-    private void setGoalTarget(@NotNull EntityLiving nmsTarget, boolean canSeeTarget, boolean alertOther) {
+    private void setGoalTarget(EntityLiving nmsTarget, boolean canSeeTarget, boolean alertOther) {
         this.canSeeTarget = canSeeTarget;
 
         setGoalTarget(nmsTarget, EntityTargetEvent.TargetReason.CUSTOM);
-        if (alertOther) {
-            ScavUtil.alertOthers(nmsEntity, 25, 0);
+        if (alertOther && getGoalTarget() != null) {
+            ScavUtil.alertOthers(getGoalTarget(), 25, nmsEntity, 25);
         }
     }
 

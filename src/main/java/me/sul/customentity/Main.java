@@ -16,7 +16,7 @@ public final class Main extends JavaPlugin {
     }
 
     private void registerClasses() {
-        Bukkit.getPluginManager().registerEvents(new EntityManager(), this);
+        Bukkit.getPluginManager().registerEvents(new EntityManager(this), this);
         getCommand("scav").setExecutor(new CustomEntityCommandExecutor());
         new AreaManager();
         Bukkit.getPluginManager().registerEvents(new ProjectileListener(), this);

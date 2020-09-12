@@ -1,19 +1,33 @@
 package me.sul.customentity.entity;
 
+import me.sul.customentity.goal.scav.EntityScavListener;
 import me.sul.customentity.util.CustomEntityRegistry;
-import org.bukkit.craftbukkit.v1_12_R1.entity.CraftEntity;
+import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityCombustEvent;
-import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.world.ChunkLoadEvent;
+import org.bukkit.plugin.Plugin;
 
 // NOTE: 몹 번호: https://pastebin.com/gPci2Kt0
 public class EntityManager implements Listener {
-    public EntityManager() {
+    private final Plugin plugin;
+    public EntityManager(Plugin plugin) {
+        this.plugin = plugin;
+        registerEntityScav();
+        registerEntityZombie();
+    }
+
+    private void registerEntityScav() {
         CustomEntityRegistry.registerCustomEntity(51, "Skeleton", EntityScav.class);
+        Bukkit.getPluginManager().registerEvents(new EntityScavListener(), plugin);
+    }
+    private void registerEntityZombie() {
         CustomEntityRegistry.registerCustomEntity(54, "Zombie", EntityZombie.class);
     }
+
+
+
 
     @EventHandler
     public void onChunkLoad(ChunkLoadEvent e) {
@@ -26,7 +40,7 @@ public class EntityManager implements Listener {
 //        }
     }
 
-    
+
     // TODO: 추후에 제거. 테스트용으로 모두 불에 타지 않게 해놓았음
     @EventHandler
     public void onCombust(EntityCombustEvent e) {
@@ -35,11 +49,4 @@ public class EntityManager implements Listener {
 //        }
     }
 
-    // NOTE: 이런거 EntityScavListener로 분리해야 하나?
-    @EventHandler
-    public void onDamage(EntityDamageEvent e) {
-        if (e.getCause() == EntityDamageEvent.DamageCause.FALL && ((CraftEntity)e.getEntity()).getHandle() instanceof EntityScav) {
-            e.setCancelled(true);
-        }
-    }
 }
