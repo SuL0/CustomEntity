@@ -8,7 +8,7 @@ import org.bukkit.event.HandlerList;
 
 @Getter
 public class CEWeaponShootEvent extends Event {
-    private static final @Getter HandlerList handlers = new HandlerList();
+    private static final HandlerList handlers = new HandlerList();
     private final Entity entity;
     private final Projectile projectile;
 
@@ -17,6 +17,10 @@ public class CEWeaponShootEvent extends Event {
         this.projectile = projectile;
     }
 
+    @Override
+    public HandlerList getHandlers() {
+        return handlers;
+    }
     public static HandlerList getHandlerList() {
         return handlers;
     }
