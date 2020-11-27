@@ -29,7 +29,7 @@ public class GunUtil {
         projVector.add(new Vector(spread[0], spread[1], spread[2]));
 
 
-        Projectile projBullet = (Projectile) entity.getWorld().spawnEntity(fireLoc, EntityType.SNOWBALL);
+        Projectile projBullet = (Projectile) entity.getWorld().spawnEntity(fireLoc, EntityType.ARROW);
         projBullet.setShooter((ProjectileSource) entity);
         projBullet.setVelocity(projVector);
         projBullet.setMetadata(PROJ_DAMAGE_META, new FixedMetadataValue(Main.getInstance(), damage));

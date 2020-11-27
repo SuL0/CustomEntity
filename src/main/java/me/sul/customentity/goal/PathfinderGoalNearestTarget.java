@@ -34,7 +34,7 @@ public class PathfinderGoalNearestTarget extends EasilyModifiedPathfinderGoal {
 
 
     @Override
-    public boolean canUse() { // 4틱마다 반복
+    public boolean canUse() {
         if (getGoalTarget() != null) return true;
         if (getRandom().nextInt(randomInterval) != 0) return false;
         EntityLiving nmsTarget = findTarget();
@@ -43,7 +43,7 @@ public class PathfinderGoalNearestTarget extends EasilyModifiedPathfinderGoal {
     }
 
     @Override
-    public boolean canContinueToUse() { // 1틱마다 반복
+    public boolean canContinueToUse() {
         if (getRandom().nextInt(randomInterval*4) == 0 || !isInTargetableState(getGoalTarget())) {
             EntityLiving nmsTarget = findTarget();
             setGoalTarget(nmsTarget, (nmsTarget instanceof EntityPlayer) ? EntityTargetEvent.TargetReason.CLOSEST_PLAYER : EntityTargetEvent.TargetReason.CLOSEST_ENTITY);
