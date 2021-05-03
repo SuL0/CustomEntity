@@ -1,7 +1,10 @@
 package me.sul.customentity.goal;
 
 import me.sul.customentity.util.PathfinderUtil;
-import net.minecraft.server.v1_12_R1.*;
+import net.minecraft.server.v1_12_R1.EntityCreature;
+import net.minecraft.server.v1_12_R1.EntityLiving;
+import net.minecraft.server.v1_12_R1.NavigationAbstract;
+import net.minecraft.server.v1_12_R1.PathfinderGoal;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.event.entity.EntityTargetEvent;
