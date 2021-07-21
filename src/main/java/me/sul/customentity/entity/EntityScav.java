@@ -70,11 +70,11 @@ public class EntityScav extends EntitySkeleton {
 
         scavCombatPhaseManager = new ScavCombatPhaseManager(this);
         goalSelector.a(4, new PathfinderGoalScavLookForwardInCombat(this));
-        goalSelector.a(4, new PathfinderGoalScavMovementWhileShootingTarget(this));
+//        goalSelector.a(4, new PathfinderGoalScavMovementWhileShootingTarget(this));
         goalSelector.a(4, new PathfinderGoalScavHandleGun(this));
-        goalSelector.a(4, new PathfinderGoalScavChaseTargetLastSeen(this));
+//        goalSelector.a(4, new PathfinderGoalScavChaseTargetLastSeen(this));
 
-        goalSelector.a(5, new PathfinderGoalStrollInSpecificArea<>(this, area, 1.0F, 55));
+//        goalSelector.a(5, new PathfinderGoalStrollInSpecificArea<>(this, area, 1.0F, 55));
         goalSelector.a(6, new PathfinderGoalRandomLookaround(this, 0.5F));
     }
     private void registerTargetSelector() {

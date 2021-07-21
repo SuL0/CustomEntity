@@ -85,17 +85,27 @@
             <artifactId>paper-api</artifactId>
             <version>1.12.2-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
+            <!--     Maven은 신기하게 scope 섹션을 안 적으면 자동으로 shade 함       -->
         </dependency>
         <dependency>
-            <groupId>org.spigotmc</groupId>
-            <artifactId>spigot</artifactId>
+            <groupId>paper</groupId>
+            <artifactId>paper</artifactId>
             <version>1.12.2-R0.1-SNAPSHOT</version>
-            <scope>provided</scope>
+            <scope>system</scope>
+            <systemPath>C:/Users/PHR/Desktop/마인즈서버/paper-1.12.2-R0.1-SNAPSHOT-shaded.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>crackshot-2</groupId>
+            <artifactId>crackshot-2</artifactId>
+            <version>version</version>
+            <scope>system</scope>
+            <systemPath>C:/Users/PHR/Desktop/PluginStorage/CrackShot-2_S.jar</systemPath>
         </dependency>
         <dependency>
             <groupId>com.comphenix.protocol</groupId>
             <artifactId>ProtocolLib</artifactId>
             <version>4.5.1</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>LibsDisguises</groupId>
@@ -107,6 +117,7 @@
             <groupId>com.github.mrrhetorical</groupId>
             <artifactId>SoundScapeAPI</artifactId>
             <version>1.1.0</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 </project>

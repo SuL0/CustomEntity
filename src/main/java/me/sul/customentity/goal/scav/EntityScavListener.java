@@ -1,6 +1,6 @@
 package me.sul.customentity.goal.scav;
 
-import com.shampaggon.crackshot.events.WeaponShootEvent;
+import com.shampaggon.crackshot2.events.WeaponShootEvent;
 import me.sul.customentity.entity.EntityScav;
 import me.sul.customentity.util.ScavUtil;
 import net.minecraft.server.v1_12_R1.EntityLiving;

@@ -1,6 +1,6 @@
 package me.sul.customentity.entityweapon;
 
-import com.shampaggon.crackshot.CSDirector;
+import com.shampaggon.crackshot2.CSDirector;
 import me.sul.customentity.Main;
 import me.sul.customentity.entityweapon.event.CEWeaponHitBlockEvent;
 import org.bukkit.Bukkit;
